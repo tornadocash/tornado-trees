@@ -1,6 +1,6 @@
 /* global task, ethers */
 require('@nomiclabs/hardhat-waffle')
-
+require('dotenv').config()
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task('accounts', 'Prints the list of accounts', async () => {
@@ -19,4 +19,10 @@ task('accounts', 'Prints the list of accounts', async () => {
  */
 module.exports = {
   solidity: '0.6.12',
+  networks: {
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`,
+      accounts: [process.env.PRIVATE_KEY],
+    },
+  },
 }
