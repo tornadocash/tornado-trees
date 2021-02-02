@@ -2253,16 +2253,6 @@ circom_runtime@0.1.8:
     ffjavascript "0.2.10"
     fnv-plus "^1.3.1"
 
-circomlib@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/circomlib/-/circomlib-0.4.1.tgz#ada51bec78fbd2602ccecf18ed145296411f20e4"
-  integrity sha512-e77a7qn+86W39ufQl7alNIbdLQmxtyzAJQhp708xLp3xln4mYM26slxt+jOg731RDDLmpZLpNFuVYAuUvDn9CQ==
-  dependencies:
-    blake-hash "^1.1.0"
-    blake2b "^2.1.3"
-    circom "0.5.33"
-    ffjavascript "0.1.0"
-
 "circomlib@git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c":
   version "0.0.20"
   resolved "git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c"
@@ -2272,6 +2262,15 @@ circomlib@^0.4.1:
     snarkjs "git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5"
     typedarray-to-buffer "^3.1.5"
     web3 "^1.2.11"
+
+"circomlib@git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1":
+  version "0.4.1"
+  resolved "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1"
+  dependencies:
+    blake-hash "^1.1.0"
+    blake2b "^2.1.3"
+    circom "0.5.33"
+    ffjavascript "0.1.0"
 
 class-is@^1.1.0:
   version "1.1.0"

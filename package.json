@@ -34,7 +34,7 @@
   "dependencies": {
     "circom": "^0.5.38",
     "circom_runtime": "^0.1.12",
-    "circomlib": "^0.4.1",
+    "circomlib": "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "dotenv": "^8.2.0",
     "ffiasm": "^0.1.1",
     "fixed-merkle-tree": "^0.5.0",
