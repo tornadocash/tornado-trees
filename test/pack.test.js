@@ -1,9 +1,4 @@
-/* global artifacts, web3, contract */
-const { expect } = require('chai')
-const MerkleTree = require('fixed-merkle-tree')
-const jsSHA = require('jssha')
-const { poseidonHash2 } = require('../src/utils')
-const { batchTreeUpdate, prove } = require('../src/controller')
+/* global ethers */
 
 const instances = [
   '0xc6325fa78E0764993Bf2997116A3771bCbcb3fa9',
@@ -18,11 +13,9 @@ const hashes = [
   '0x57f7b90a3cb4ea6860e6dd5fa44ac4f53ebe6ae3948af577a01ef51738313246',
 ]
 
-const levels = 20
 const CHUNK_TREE_HEIGHT = 7
 describe.skip('Pack', () => {
   it('should work', async () => {
-    const tree = new MerkleTree(levels, [], { hashFunction: poseidonHash2 })
     const Pack = await ethers.getContractFactory('Pack')
     const pack = await Pack.deploy()
 

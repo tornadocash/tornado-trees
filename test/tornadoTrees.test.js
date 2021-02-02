@@ -1,3 +1,4 @@
+/* global ethers */
 const { expect } = require('chai')
 const { toFixedHex, poseidonHash2, randomBN } = require('../src/utils')
 const MerkleTree = require('fixed-merkle-tree')

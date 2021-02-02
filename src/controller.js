@@ -1,7 +1,7 @@
 const ethers = require('ethers')
 const BigNumber = ethers.BigNumber
 
-const { bitsToNumber, toFixedHex, toBuffer, poseidonHash, poseidonHash2 } = require('./utils')
+const { bitsToNumber, toBuffer, poseidonHash } = require('./utils')
 
 const jsSHA = require('jssha')
 

@@ -1,4 +1,3 @@
-/* global artifacts, web3, contract */
 const { expect } = require('chai')
 const MerkleTree = require('fixed-merkle-tree')
 const { poseidonHash2, randomBN } = require('../src/utils')
@@ -19,5 +18,7 @@ describe('Snark', () => {
     }
     const data = await batchTreeUpdate(tree, events)
     const proof = await prove(data, './artifacts/circuits/BatchTreeUpdate')
+
+    expect(proof.length).to.be.gt(0)
   })
 })
