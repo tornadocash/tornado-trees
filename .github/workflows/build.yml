@@ -12,14 +12,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-       - uses: actions/setup-node@v1
-         with:
-           node-version: 12
-       - run: yarn install
-       - run: cargo install zkutil
-       - run: yarn circuit
-       - run: yarn test
-       - run: yarn lint
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: yarn install
+      - run: cargo install zkutil
+      - run: yarn circuit
+      - run: yarn test
+      - run: yarn lint
 #       - name: Telegram Failure Notification
 #         uses: appleboy/telegram-action@0.0.7
 #         if: failure()
