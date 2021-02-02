@@ -1,5 +1,5 @@
 /* global artifacts, web3, contract */
-const { expect } = require("chai")
+const { expect } = require('chai')
 const MerkleTree = require('fixed-merkle-tree')
 const { poseidonHash2, randomBN } = require('../src/utils')
 const { batchTreeUpdate, prove } = require('../src/controller')

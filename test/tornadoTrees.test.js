@@ -1,16 +1,18 @@
-const { expect } = require("chai")
+const { expect } = require('chai')
 const { toFixedHex, poseidonHash2, randomBN } = require('../src/utils')
 const MerkleTree = require('fixed-merkle-tree')
 const controller = require('../src/controller')
 
 async function register(note, tornadoTrees, from) {
-  await tornadoTrees.connect(from).register(
-    note.instance,
-    toFixedHex(note.commitment),
-    toFixedHex(note.nullifierHash),
-    note.depositBlock,
-    note.withdrawalBlock,
-  )
+  await tornadoTrees
+    .connect(from)
+    .register(
+      note.instance,
+      toFixedHex(note.commitment),
+      toFixedHex(note.nullifierHash),
+      note.depositBlock,
+      note.withdrawalBlock,
+    )
 }
 
 const toEns = (addr) => toFixedHex(addr, 20).padEnd(66, '0')
@@ -27,7 +29,7 @@ const instances = [
 
 const blocks = ['0xaaaaaaaa', '0xbbbbbbbb', '0xcccccccc', '0xdddddddd']
 
-describe("TornadoTrees", function() {
+describe('TornadoTrees', function () {
   let tree
   let operator
   let tornadoProxy
@@ -36,14 +38,14 @@ describe("TornadoTrees", function() {
   let notes
   let events
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     tree = new MerkleTree(levels, [], { hashFunction: poseidonHash2 })
     ;[operator, tornadoProxy] = await ethers.getSigners()
 
-    const BatchTreeUpdateVerifier = await ethers.getContractFactory("BatchTreeUpdateVerifier")
+    const BatchTreeUpdateVerifier = await ethers.getContractFactory('BatchTreeUpdateVerifier')
     verifier = await BatchTreeUpdateVerifier.deploy()
 
-    const TornadoTrees = await ethers.getContractFactory("TornadoTreesMock")
+    const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
     tornadoTrees = await TornadoTrees.deploy(
       toEns(operator.address),
       toEns(tornadoProxy.address),
@@ -71,7 +73,7 @@ describe("TornadoTrees", function() {
     }))
   })
 
-  it("Should calculate hash", async function() {
+  it('Should calculate hash', async function () {
     const data = await controller.batchTreeUpdate(tree, events)
     const solHash = await tornadoTrees.updateDepositTreeMock(
       toFixedHex(data.oldRoot),
@@ -82,7 +84,7 @@ describe("TornadoTrees", function() {
     expect(solHash).to.be.equal(data.argsHash)
   })
 
-  it("Should calculate hash", async function() {
+  it('Should calculate hash', async function () {
     const data = await controller.batchTreeUpdate(tree, events)
     const proof = await controller.prove(data, './artifacts/circuits/BatchTreeUpdate')
     await tornadoTrees.updateDepositTree(

@@ -1,5 +1,20 @@
 {
   "name": "hardhat-project",
+  "repository": "https://github.com/tornadocash/tornado-trees.git",
+  "author": "Tornadocash team <hello@tornado.cash>",
+  "license": "MIT",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "eslint": "eslint --ext .js --ignore-path .gitignore .",
+    "prettier:check": "prettier --check . --config .prettierrc",
+    "prettier:fix": "prettier --write . --config .prettierrc",
+    "lint": "yarn eslint && yarn prettier:check",
+    "circuit:batchTreeUpdate": "scripts/buildCircuit.sh BatchTreeUpdate",
+    "circuit:batchTreeUpdateLarge": "scripts/buildCircuit.sh BatchTreeUpdate large",
+    "circuit:batchTreeUpdateWitness": "scripts/buildWitness.sh BatchTreeUpdate",
+    "circuit": "yarn circuit:batchTreeUpdate"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",

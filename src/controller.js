@@ -1,13 +1,7 @@
 const ethers = require('ethers')
 const BigNumber = ethers.BigNumber
 
-const {
-  bitsToNumber,
-  toFixedHex,
-  toBuffer,
-  poseidonHash,
-  poseidonHash2,
-} = require('./utils')
+const { bitsToNumber, toFixedHex, toBuffer, poseidonHash, poseidonHash2 } = require('./utils')
 
 const jsSHA = require('jssha')
 
@@ -29,12 +23,14 @@ function hashInputs(input) {
   }
 
   const hash = '0x' + sha.getHash('HEX')
-  const result = BigNumber.from(hash).mod(BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString()
+  const result = BigNumber.from(hash)
+    .mod(BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617'))
+    .toString()
   return result
 }
 
 function prove(input, keyBasePath) {
-  return tmp.dir().then(async dir => {
+  return tmp.dir().then(async (dir) => {
     dir = dir.path
     fs.writeFileSync(`${dir}/input.json`, JSON.stringify(input, null, 2))
     let out
@@ -47,13 +43,15 @@ function prove(input, keyBasePath) {
         out = await exec(`npx snarkjs wd ${keyBasePath}.wasm ${dir}/input.json ${dir}/witness.wtns`)
         out = await exec(`npx snarkjs wej ${dir}/witness.wtns ${dir}/witness.json`)
       }
-      out = await exec(`zkutil prove -c ${keyBasePath}.r1cs -p ${keyBasePath}.params -w ${dir}/witness.json -r ${dir}/proof.json -o ${dir}/public.json`)
+      out = await exec(
+        `zkutil prove -c ${keyBasePath}.r1cs -p ${keyBasePath}.params -w ${dir}/witness.json -r ${dir}/proof.json -o ${dir}/public.json`,
+      )
     } catch (e) {
       console.log(out, e)
       throw e
     }
     return '0x' + JSON.parse(fs.readFileSync(`${dir}/proof.json`)).proof
-  });
+  })
 }
 
 function batchTreeUpdate(tree, events) {
@@ -67,7 +65,7 @@ function batchTreeUpdate(tree, events) {
   tree.bulkInsert(leaves)
   const newRoot = tree.root().toString()
   let { pathElements, pathIndices } = tree.path(tree.elements().length - 1)
-  pathElements = pathElements.slice(batchHeight).map(a => BigNumber.from(a).toString())
+  pathElements = pathElements.slice(batchHeight).map((a) => BigNumber.from(a).toString())
   pathIndices = bitsToNumber(pathIndices.slice(batchHeight)).toString()
 
   const input = {

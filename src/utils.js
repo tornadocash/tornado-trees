@@ -13,9 +13,19 @@ const randomBN = (nbytes = 31) => BigNumber.from(crypto.randomBytes(nbytes))
 /** BigNumber to hex string of specified length */
 const toFixedHex = (number, length = 32) =>
   '0x' +
-  (number instanceof Buffer ? number.toString('hex') : BigNumber.from(number).toHexString().slice(2)).padStart(length * 2, '0')
+  (number instanceof Buffer
+    ? number.toString('hex')
+    : BigNumber.from(number).toHexString().slice(2)
+  ).padStart(length * 2, '0')
 
-const toBuffer = (value, length) => Buffer.from(BigNumber.from(value).toHexString().slice(2).padStart(length * 2, '0'), 'hex')
+const toBuffer = (value, length) =>
+  Buffer.from(
+    BigNumber.from(value)
+      .toHexString()
+      .slice(2)
+      .padStart(length * 2, '0'),
+    'hex',
+  )
 
 function bitsToNumber(bits) {
   let result = 0

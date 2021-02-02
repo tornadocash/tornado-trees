@@ -1,5 +1,5 @@
 /* global artifacts, web3, contract */
-const { expect } = require("chai")
+const { expect } = require('chai')
 const MerkleTree = require('fixed-merkle-tree')
 const jsSHA = require('jssha')
 const { poseidonHash2 } = require('../src/utils')
@@ -15,7 +15,7 @@ const instances = [
 const hashes = [
   '0x6f44cd7458bf24f65851fa8097712e3a8d9a6f3e387c501b285338308a74b8f3',
   '0xafd3103939b7b0cd7a0ad1ddac57dd13af7f2825a21b47ae995b5bb0f767a106',
-  '0x57f7b90a3cb4ea6860e6dd5fa44ac4f53ebe6ae3948af577a01ef51738313246'
+  '0x57f7b90a3cb4ea6860e6dd5fa44ac4f53ebe6ae3948af577a01ef51738313246',
 ]
 
 const levels = 20
@@ -23,7 +23,7 @@ const CHUNK_TREE_HEIGHT = 7
 describe.skip('Pack', () => {
   it('should work', async () => {
     const tree = new MerkleTree(levels, [], { hashFunction: poseidonHash2 })
-    const Pack = await ethers.getContractFactory("Pack")
+    const Pack = await ethers.getContractFactory('Pack')
     const pack = await Pack.deploy()
 
     const notes = []
@@ -34,7 +34,11 @@ describe.skip('Pack', () => {
         block: 1 + i,
       }
     }
-    const receipt = await pack.pack2(notes.map(a => a.hash), notes.map(a => a.instance), notes.map(a => a.block))
+    const receipt = await pack.pack2(
+      notes.map((a) => a.hash),
+      notes.map((a) => a.instance),
+      notes.map((a) => a.block),
+    )
     const receipt2 = await receipt.wait()
 
     console.log(`total ${receipt2.gasUsed}`)

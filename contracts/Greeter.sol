@@ -3,7 +3,6 @@ pragma solidity ^0.6.0;
 
 import "hardhat/console.sol";
 
-
 contract Greeter {
   string greeting;
 
