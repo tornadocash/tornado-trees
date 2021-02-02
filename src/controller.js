@@ -1,11 +1,15 @@
+const ethers = require('ethers')
+const BigNumber = ethers.BigNumber
+
 const {
   bitsToNumber,
   toFixedHex,
+  toBuffer,
   poseidonHash,
   poseidonHash2,
 } = require('./utils')
+
 const jsSHA = require('jssha')
-const { toBN } = require('web3-utils')
 
 const fs = require('fs')
 const tmp = require('tmp-promise')
@@ -14,18 +18,18 @@ const exec = util.promisify(require('child_process').exec)
 
 function hashInputs(input) {
   const sha = new jsSHA('SHA-256', 'ARRAYBUFFER')
-  sha.update(toBN(input.oldRoot).toBuffer('be', 32))
-  sha.update(toBN(input.newRoot).toBuffer('be', 32))
-  sha.update(toBN(input.pathIndices).toBuffer('be', 4))
+  sha.update(toBuffer(input.oldRoot, 32))
+  sha.update(toBuffer(input.newRoot, 32))
+  sha.update(toBuffer(input.pathIndices, 4))
 
   for (let i = 0; i < input.instances.length; i++) {
-    sha.update(toBN(input.hashes[i]).toBuffer('be', 32))
-    sha.update(toBN(input.instances[i]).toBuffer('be', 20))
-    sha.update(toBN(input.blocks[i]).toBuffer('be', 4))
+    sha.update(toBuffer(input.hashes[i], 32))
+    sha.update(toBuffer(input.instances[i], 20))
+    sha.update(toBuffer(input.blocks[i], 4))
   }
 
-  const hash = sha.getHash('HEX')
-  const result = toBN(hash).mod(toBN('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString()
+  const hash = '0x' + sha.getHash('HEX')
+  const result = BigNumber.from(hash).mod(BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617')).toString()
   return result
 }
 
@@ -63,7 +67,7 @@ function batchTreeUpdate(tree, events) {
   tree.bulkInsert(leaves)
   const newRoot = tree.root().toString()
   let { pathElements, pathIndices } = tree.path(tree.elements().length - 1)
-  pathElements = pathElements.slice(batchHeight).map(a => toBN(a).toString())
+  pathElements = pathElements.slice(batchHeight).map(a => BigNumber.from(a).toString())
   pathIndices = bitsToNumber(pathIndices.slice(batchHeight)).toString()
 
   const input = {
@@ -71,9 +75,9 @@ function batchTreeUpdate(tree, events) {
     newRoot,
     pathIndices,
     pathElements,
-    instances: events.map((e) => toBN(e.instance).toString()),
-    hashes: events.map((e) => toBN(e.hash).toString()),
-    blocks: events.map((e) => toBN(e.block).toString()),
+    instances: events.map((e) => BigNumber.from(e.instance).toString()),
+    hashes: events.map((e) => BigNumber.from(e.hash).toString()),
+    blocks: events.map((e) => BigNumber.from(e.block).toString()),
   }
 
   input.argsHash = hashInputs(input)
