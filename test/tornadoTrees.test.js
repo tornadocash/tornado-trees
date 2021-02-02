@@ -37,7 +37,8 @@ describe('TornadoTrees', function () {
   let verifier
   let tornadoTrees
   let notes
-  let events
+  const depositEvents = []
+  const withdrawalEvents = []
 
   beforeEach(async function () {
     tree = new MerkleTree(levels, [], { hashFunction: poseidonHash2 })
@@ -65,44 +66,99 @@ describe('TornadoTrees', function () {
         nullifierHash: randomBN(),
       }
       await register(notes[i], tornadoTrees, tornadoProxy)
+      depositEvents[i] = {
+        hash: toFixedHex(notes[i].commitment),
+        instance: toFixedHex(notes[i].instance, 20),
+        block: toFixedHex(notes[i].depositBlock, 4),
+      }
+      withdrawalEvents[i] = {
+        hash: toFixedHex(notes[i].nullifierHash),
+        instance: toFixedHex(notes[i].instance, 20),
+        block: toFixedHex(notes[i].withdrawalBlock, 4),
+      }
     }
-
-    events = notes.map((note) => ({
-      hash: toFixedHex(note.commitment),
-      instance: toFixedHex(note.instance, 20),
-      block: toFixedHex(note.depositBlock, 4),
-    }))
   })
 
-  it('Should calculate hash', async function () {
-    const data = await controller.batchTreeUpdate(tree, events)
-    const solHash = await tornadoTrees.updateDepositTreeMock(
-      toFixedHex(data.oldRoot),
-      toFixedHex(data.newRoot),
-      toFixedHex(data.pathIndices, 4),
-      events,
-    )
-    expect(solHash).to.be.equal(data.argsHash)
+  describe('#updateDepositTree', () => {
+    it('should check hash', async () => {
+      const { args } = controller.batchTreeUpdate(tree, depositEvents)
+      const solHash = await tornadoTrees.updateDepositTreeMock(...args.slice(1))
+      expect(solHash).to.be.equal(args[0])
+    })
+
+    it('should prove snark', async () => {
+      const { input, args } = controller.batchTreeUpdate(tree, depositEvents)
+      const proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+      await tornadoTrees.updateDepositTree(proof, ...args)
+
+      const updatedRoot = await tornadoTrees.depositRoot()
+      expect(updatedRoot).to.be.equal(tree.root())
+    })
+
+    it('should work for non-empty tree', async () => {
+      let { input, args } = controller.batchTreeUpdate(tree, depositEvents)
+      let proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+      await tornadoTrees.updateDepositTree(proof, ...args)
+      let updatedRoot = await tornadoTrees.depositRoot()
+      expect(updatedRoot).to.be.equal(tree.root())
+      //
+      for (let i = 0; i < notes.length; i++) {
+        await register(notes[i], tornadoTrees, tornadoProxy)
+      }
+      ;({ input, args } = controller.batchTreeUpdate(tree, depositEvents))
+      proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+      await tornadoTrees.updateDepositTree(proof, ...args)
+      updatedRoot = await tornadoTrees.depositRoot()
+      expect(updatedRoot).to.be.equal(tree.root())
+    })
+    it('should reject for partially filled tree')
+    it('should reject for outdated deposit root')
+    it('should reject for incorrect insert index')
+    it('should reject for overflows of newRoot')
+    it('should reject for invalid sha256 args')
   })
 
-  it('Should calculate hash', async function () {
-    const data = await controller.batchTreeUpdate(tree, events)
-    const proof = await controller.prove(data, './artifacts/circuits/BatchTreeUpdate')
-    await tornadoTrees.updateDepositTree(
-      proof,
-      toFixedHex(data.argsHash),
-      toFixedHex(data.oldRoot),
-      toFixedHex(data.newRoot),
-      toFixedHex(data.pathIndices, 4),
-      events,
-    )
-    expect(await tornadoTrees.depositRoot()).to.be.equal(tree.root())
+  describe('#getRegisteredDeposits', () => {
+    it('should work', async () => {
+      const abi = new ethers.utils.AbiCoder()
+      let { count, _deposits } = await tornadoTrees.getRegisteredDeposits()
+      expect(count).to.be.equal(notes.length)
+      _deposits.forEach((hash, i) => {
+        const encodedData = abi.encode(
+          ['address', 'bytes32', 'uint256'],
+          [notes[i].instance, toFixedHex(notes[i].commitment), notes[i].depositBlock],
+        )
+        const leaf = ethers.utils.keccak256(encodedData)
+
+        expect(leaf).to.be.equal(hash)
+      })
+      // res.length.should.be.equal(1)
+      // res[0].should.be.true
+      // await tornadoTrees.updateRoots([note1DepositLeaf], [])
+
+      // res = await tornadoTrees.getRegisteredDeposits()
+      // res.length.should.be.equal(0)
+
+      // await registerDeposit(note2, tornadoTrees)
+      // res = await tornadoTrees.getRegisteredDeposits()
+      // // res[0].should.be.true
+    })
   })
 
-  it('should work for non-empty tree')
-  it('should reject for partially filled tree')
-  it('should reject for outdated deposit root')
-  it('should reject for incorrect insert index')
-  it('should reject for overflows of newRoot')
-  it('should reject for invalid sha256 args')
+  describe('#getRegisteredWithdrawals', () => {
+    it('should work', async () => {
+      const abi = new ethers.utils.AbiCoder()
+      let { count, _withdrawals } = await tornadoTrees.getRegisteredWithdrawals()
+      expect(count).to.be.equal(notes.length)
+      _withdrawals.forEach((hash, i) => {
+        const encodedData = abi.encode(
+          ['address', 'bytes32', 'uint256'],
+          [notes[i].instance, toFixedHex(notes[i].nullifierHash), notes[i].withdrawalBlock],
+        )
+        const leaf = ethers.utils.keccak256(encodedData)
+
+        expect(leaf).to.be.equal(hash)
+      })
+    })
+  })
 })

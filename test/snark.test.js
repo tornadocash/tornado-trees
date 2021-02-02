@@ -16,8 +16,8 @@ describe('Snark', () => {
         block: randomBN(4).toString(),
       })
     }
-    const data = await batchTreeUpdate(tree, events)
-    const proof = await prove(data, './artifacts/circuits/BatchTreeUpdate')
+    const { input } = batchTreeUpdate(tree, events)
+    const proof = await prove(input, './artifacts/circuits/BatchTreeUpdate')
 
     expect(proof.length).to.be.gt(0)
   })

@@ -1,7 +1,7 @@
 const ethers = require('ethers')
 const BigNumber = ethers.BigNumber
 
-const { bitsToNumber, toBuffer, poseidonHash } = require('./utils')
+const { bitsToNumber, toBuffer, toFixedHex, poseidonHash } = require('./utils')
 
 const jsSHA = require('jssha')
 
@@ -79,7 +79,19 @@ function batchTreeUpdate(tree, events) {
   }
 
   input.argsHash = hashInputs(input)
-  return input
+
+  const args = [
+    toFixedHex(input.argsHash),
+    toFixedHex(input.oldRoot),
+    toFixedHex(input.newRoot),
+    toFixedHex(input.pathIndices, 4),
+    events.map((e) => ({
+      hash: toFixedHex(e.hash),
+      instance: toFixedHex(e.instance, 20),
+      block: toFixedHex(e.block, 4),
+    })),
+  ]
+  return { input, args }
   // const proofData = await websnarkUtils.genWitnessAndProve(
   //   this.groth16,
   //   input,

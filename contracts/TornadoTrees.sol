@@ -74,9 +74,9 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
     emit DepositData(_instance, _commitment, blockNumber(), deposits.length - 1);
   }
 
-  function registerWithdrawal(address _instance, bytes32 _nullifier) external override onlyTornadoProxy {
-    withdrawals.push(keccak256(abi.encode(_instance, _nullifier, blockNumber())));
-    emit WithdrawalData(_instance, _nullifier, blockNumber(), withdrawals.length - 1);
+  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external override onlyTornadoProxy {
+    withdrawals.push(keccak256(abi.encode(_instance, _nullifierHash, blockNumber())));
+    emit WithdrawalData(_instance, _nullifierHash, blockNumber(), withdrawals.length - 1);
   }
 
   // todo !!! ensure that during migration the tree is filled evenly
@@ -92,7 +92,6 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
     require(_newRoot != previousDepositRoot, "Outdated deposit root");
     require(_currentRoot == depositRoot, "Proposed deposit root is invalid");
     require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect insert index");
-    require(uint256(_newRoot) < SNARK_FIELD, "Proposed root is out of range"); // optional
 
     bytes memory data = new bytes(BYTES_SIZE);
     assembly {
@@ -101,12 +100,11 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
       mstore(add(data, 0x20), _currentRoot)
     }
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
-      (bytes32 hash, address instance, uint32 depositBlock) = (_events[i].hash, _events[i].instance, _events[i].block);
-      bytes32 leafHash = keccak256(abi.encode(instance, hash, depositBlock));
+      (bytes32 hash, address instance, uint32 blockNumber) = (_events[i].hash, _events[i].instance, _events[i].block);
+      bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
       require(leafHash == deposits[offset + i], "Incorrect deposit");
-      require(uint256(hash) < SNARK_FIELD, "Hash out of range"); // optional
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), depositBlock)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
       }
@@ -143,12 +141,12 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
       mstore(add(data, 0x20), _currentRoot)
     }
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
-      (bytes32 hash, address instance, uint32 withdrawalBlock) = (_events[i].hash, _events[i].instance, _events[i].block);
-      bytes32 leafHash = keccak256(abi.encode(instance, hash, withdrawalBlock));
+      (bytes32 hash, address instance, uint32 blockNumber) = (_events[i].hash, _events[i].instance, _events[i].block);
+      bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
       require(leafHash == withdrawals[offset + i], "Incorrect withdrawal");
       require(uint256(hash) < SNARK_FIELD, "Hash out of range");
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), withdrawalBlock)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
       }
