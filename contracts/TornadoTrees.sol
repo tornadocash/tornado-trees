@@ -4,17 +4,17 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "torn-token/contracts/ENS.sol";
-import "./interfaces/ITornadoTrees.sol";
+import "./interfaces/ITornadoTreesV1.sol";
 import "./interfaces/IVerifier.sol";
 
-contract TornadoTrees is ITornadoTrees, EnsResolve {
+contract TornadoTrees is EnsResolve {
   address public immutable governance;
   bytes32 public depositRoot;
   bytes32 public previousDepositRoot;
   bytes32 public withdrawalRoot;
   bytes32 public previousWithdrawalRoot;
   address public tornadoProxy;
-  IVerifier public immutable treeUpdateVerifier;
+  IVerifier public treeUpdateVerifier;
 
   // make sure CHUNK_TREE_HEIGHT has the same value in BatchTreeUpdate.circom
   uint256 public constant CHUNK_TREE_HEIGHT = 2;
@@ -28,6 +28,8 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
 
   bytes32[] public withdrawals;
   uint256 public lastProcessedWithdrawalLeaf;
+
+  bool public initialized;
 
   event DepositData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
   event WithdrawalData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
@@ -55,29 +57,99 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
     _;
   }
 
-  constructor(
-    bytes32 _governance,
-    bytes32 _tornadoProxy,
-    bytes32 _treeUpdateVerifier,
-    bytes32 _depositRoot,
-    bytes32 _withdrawalRoot
-  ) public {
-    governance = resolve(_governance);
-    tornadoProxy = resolve(_tornadoProxy);
-    treeUpdateVerifier = IVerifier(resolve(_treeUpdateVerifier));
-    depositRoot = _depositRoot;
-    withdrawalRoot = _withdrawalRoot;
+  modifier onlyInitialized() {
+    require(initialized, "The contract is in the process of the migration");
+    _;
   }
 
-  function registerDeposit(address _instance, bytes32 _commitment) external override onlyTornadoProxy {
+  constructor(
+    address _governance,
+    address _tornadoProxy,
+    ITornadoTreesV1 _tornadoTreesV1,
+    IVerifier _treeUpdateVerifier
+  ) public {
+    governance = _governance;
+    tornadoProxy = _tornadoProxy;
+    treeUpdateVerifier = _treeUpdateVerifier;
+
+    depositRoot = _tornadoTreesV1.depositRoot();
+    withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
+
+    uint256 _lastProcessedDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
+    require(_lastProcessedDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees contract state");
+    lastProcessedDepositLeaf = _lastProcessedDepositLeaf;
+
+    uint256 _lastProcessedWithdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
+    require(_lastProcessedWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees contract state");
+    lastProcessedWithdrawalLeaf = _lastProcessedWithdrawalLeaf;
+
+    uint256 i = _lastProcessedDepositLeaf + 1;
+
+    // todo deposits.length = _tornadoTreesV1.deposits.length
+    while (true) {
+      bytes32 deposit = _tornadoTreesV1.deposits(i);
+      if (deposit == bytes32(0)) {
+        break;
+      }
+      i++;
+      deposits.push(deposit);
+    }
+
+    i = _lastProcessedWithdrawalLeaf + 1;
+    while (true) {
+      bytes32 withdrawal = _tornadoTreesV1.withdrawals(i);
+      if (withdrawal == bytes32(0)) {
+        break;
+      }
+      i++;
+      withdrawals.push(withdrawal);
+    }
+  }
+
+  function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy onlyInitialized {
     deposits.push(keccak256(abi.encode(_instance, _commitment, blockNumber())));
     emit DepositData(_instance, _commitment, blockNumber(), deposits.length - 1);
   }
 
-  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external override onlyTornadoProxy {
+  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external onlyTornadoProxy onlyInitialized {
     withdrawals.push(keccak256(abi.encode(_instance, _nullifierHash, blockNumber())));
     emit WithdrawalData(_instance, _nullifierHash, blockNumber(), withdrawals.length - 1);
   }
+
+  function migrate(TreeLeaf[] calldata _depositEvents, TreeLeaf[] calldata _withdrawalEvents) external {
+    require(!initialized, "Already migrated");
+    uint256 _lastProcessedDepositLeaf = lastProcessedDepositLeaf;
+    uint256 _depositLength = deposits.length;
+    for (uint256 i = 0; i < _depositLength - _lastProcessedDepositLeaf; i++) {
+      bytes32 leafHash = keccak256(abi.encode(_depositEvents[i].instance, _depositEvents[i].hash, _depositEvents[i].block));
+      require(leafHash == deposits[_lastProcessedDepositLeaf + i], "Incorrect deposit");
+      emit DepositData(
+        _depositEvents[i].instance,
+        _depositEvents[i].hash,
+        _depositEvents[i].block,
+        _lastProcessedDepositLeaf + i
+      );
+    }
+
+    uint256 _withdrawalLength = withdrawals.length;
+    uint256 _lastProcessedWithdrawalLeaf = lastProcessedWithdrawalLeaf;
+    for (uint256 i = 0; i < _withdrawalLength - _lastProcessedWithdrawalLeaf; i++) {
+      bytes32 leafHash = keccak256(
+        abi.encode(_withdrawalEvents[i].instance, _withdrawalEvents[i].hash, _withdrawalEvents[i].block)
+      );
+      require(leafHash == withdrawals[_lastProcessedWithdrawalLeaf + i], "Incorrect deposit");
+      emit DepositData(
+        _withdrawalEvents[i].instance,
+        _withdrawalEvents[i].hash,
+        _withdrawalEvents[i].block,
+        _lastProcessedWithdrawalLeaf + i
+      );
+    }
+
+    initialized = true;
+  }
+
+  // если чтото загрузит руты на старый контракт во время миграции то пизда
 
   // todo !!! ensure that during migration the tree is filled evenly
   function updateDepositTree(
@@ -87,7 +159,7 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
     bytes32 _newRoot,
     uint32 _pathIndices,
     TreeLeaf[CHUNK_SIZE] calldata _events
-  ) public {
+  ) public onlyInitialized {
     uint256 offset = lastProcessedDepositLeaf;
     require(_newRoot != previousDepositRoot, "Outdated deposit root");
     require(_currentRoot == depositRoot, "Proposed deposit root is invalid");
@@ -127,7 +199,7 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
     bytes32 _newRoot,
     uint256 _pathIndices,
     TreeLeaf[CHUNK_SIZE] calldata _events
-  ) public {
+  ) public onlyInitialized {
     uint256 offset = lastProcessedWithdrawalLeaf;
     require(_newRoot != previousWithdrawalRoot, "Outdated withdrawal root");
     require(_currentRoot == withdrawalRoot, "Proposed withdrawal root is invalid");
@@ -185,6 +257,10 @@ contract TornadoTrees is ITornadoTrees, EnsResolve {
 
   function setTornadoProxyContract(address _tornadoProxy) external onlyGovernance {
     tornadoProxy = _tornadoProxy;
+  }
+
+  function setVerifierContract(IVerifier _treeUpdateVerifier) external onlyGovernance {
+    treeUpdateVerifier = _treeUpdateVerifier;
   }
 
   function blockNumber() public view virtual returns (uint256) {

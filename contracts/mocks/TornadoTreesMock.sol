@@ -4,17 +4,18 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "../TornadoTrees.sol";
+import "../interfaces/ITornadoTreesV1.sol";
+import "../interfaces/IVerifier.sol";
 
 contract TornadoTreesMock is TornadoTrees {
   uint256 public currentBlock;
 
   constructor(
-    bytes32 _governance,
-    bytes32 _tornadoProxy,
-    bytes32 _treeUpdateVerifier,
-    bytes32 _depositRoot,
-    bytes32 _withdrawalRoot
-  ) public TornadoTrees(_governance, _tornadoProxy, _treeUpdateVerifier, _depositRoot, _withdrawalRoot) {}
+    address _governance,
+    address _tornadoProxy,
+    ITornadoTreesV1 _tornadoTreesV1,
+    IVerifier _treeUpdateVerifier
+  ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier) {}
 
   function resolve(bytes32 _addr) public view override returns (address) {
     return address(uint160(uint256(_addr) >> (12 * 8)));
