@@ -25,10 +25,12 @@ contract TornadoTrees is EnsResolve {
   uint256 public constant BYTES_SIZE = 32 + 32 + 4 + CHUNK_SIZE * ITEM_SIZE;
   uint256 public constant SNARK_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-  bytes32[] public deposits;
+  mapping(uint256 => bytes32) public deposits;
+  uint256 public depositsLength;
   uint256 public lastProcessedDepositLeaf;
 
-  bytes32[] public withdrawals;
+  mapping(uint256 => bytes32) public withdrawals;
+  uint256 public withdrawalsLength;
   uint256 public lastProcessedWithdrawalLeaf;
 
   bool public initialized;
@@ -86,8 +88,6 @@ contract TornadoTrees is EnsResolve {
     lastProcessedWithdrawalLeaf = withdrawalLeaf;
 
     uint256 i = depositLeaf;
-
-    // todo deposits.length = _tornadoTreesV1.deposits.length
     while (true) {
       (bool success, bytes memory data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }( // todo define more specise gas value.
         abi.encodeWithSignature("deposits(uint256)", i)
@@ -96,9 +96,10 @@ contract TornadoTrees is EnsResolve {
         break;
       }
       bytes32 deposit = abi.decode(data, (bytes32));
+      deposits[i] = deposit;
       i++;
-      deposits.push(deposit);
     }
+    depositsLength = depositLeaf + i;
 
     i = withdrawalLeaf;
     while (true) {
@@ -110,25 +111,28 @@ contract TornadoTrees is EnsResolve {
         break;
       }
       bytes32 withdrawal = abi.decode(data, (bytes32));
+      withdrawals[i] = withdrawal;
       i++;
-      withdrawals.push(withdrawal);
     }
+    withdrawalsLength = withdrawalLeaf + i;
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy onlyInitialized {
-    deposits.push(keccak256(abi.encode(_instance, _commitment, blockNumber())));
-    emit DepositData(_instance, _commitment, blockNumber(), deposits.length - 1);
+    uint256 _depositsLength = depositsLength;
+    deposits[_depositsLength] = keccak256(abi.encode(_instance, _commitment, blockNumber()));
+    emit DepositData(_instance, _commitment, blockNumber(), _depositsLength - 1);
   }
 
   function registerWithdrawal(address _instance, bytes32 _nullifierHash) external onlyTornadoProxy onlyInitialized {
-    withdrawals.push(keccak256(abi.encode(_instance, _nullifierHash, blockNumber())));
-    emit WithdrawalData(_instance, _nullifierHash, blockNumber(), withdrawals.length - 1);
+    uint256 _withdrawalsLength = withdrawalsLength;
+    withdrawals[_withdrawalsLength] = keccak256(abi.encode(_instance, _nullifierHash, blockNumber()));
+    emit WithdrawalData(_instance, _nullifierHash, blockNumber(), _withdrawalsLength - 1);
   }
 
   function migrate(TreeLeaf[] calldata _depositEvents, TreeLeaf[] calldata _withdrawalEvents) external {
     require(!initialized, "Already migrated");
     uint256 _lastProcessedDepositLeaf = lastProcessedDepositLeaf;
-    uint256 _depositLength = deposits.length;
+    uint256 _depositLength = depositsLength;
     for (uint256 i = 0; i < _depositLength - _lastProcessedDepositLeaf; i++) {
       bytes32 leafHash = keccak256(abi.encode(_depositEvents[i].instance, _depositEvents[i].hash, _depositEvents[i].block));
       require(leafHash == deposits[_lastProcessedDepositLeaf + i], "Incorrect deposit");
@@ -140,7 +144,7 @@ contract TornadoTrees is EnsResolve {
       );
     }
 
-    uint256 _withdrawalLength = withdrawals.length;
+    uint256 _withdrawalLength = withdrawalsLength;
     uint256 _lastProcessedWithdrawalLeaf = lastProcessedWithdrawalLeaf;
     for (uint256 i = 0; i < _withdrawalLength - _lastProcessedWithdrawalLeaf; i++) {
       bytes32 leafHash = keccak256(
@@ -245,16 +249,16 @@ contract TornadoTrees is EnsResolve {
     require(_withdrawalRoot == withdrawalRoot || _withdrawalRoot == previousWithdrawalRoot, "Incorrect withdrawal tree root");
   }
 
-  function getRegisteredDeposits() external view returns (uint256 count, bytes32[] memory _deposits) {
-    count = deposits.length - lastProcessedDepositLeaf;
+  function getRegisteredDeposits() external view returns (bytes32[] memory _deposits) {
+    uint256 count = depositsLength - lastProcessedDepositLeaf;
     _deposits = new bytes32[](count);
     for (uint256 i = 0; i < count; i++) {
       _deposits[i] = deposits[lastProcessedDepositLeaf + i];
     }
   }
 
-  function getRegisteredWithdrawals() external view returns (uint256 count, bytes32[] memory _withdrawals) {
-    count = withdrawals.length - lastProcessedWithdrawalLeaf;
+  function getRegisteredWithdrawals() external view returns (bytes32[] memory _withdrawals) {
+    uint256 count = withdrawalsLength - lastProcessedWithdrawalLeaf;
     _withdrawals = new bytes32[](count);
     for (uint256 i = 0; i < count; i++) {
       _withdrawals[i] = withdrawals[lastProcessedWithdrawalLeaf + i];

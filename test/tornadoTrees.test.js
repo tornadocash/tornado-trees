@@ -122,7 +122,8 @@ describe('TornadoTrees', function () {
   describe('#getRegisteredDeposits', () => {
     it('should work', async () => {
       const abi = new ethers.utils.AbiCoder()
-      let { count, _deposits } = await tornadoTrees.getRegisteredDeposits()
+      const count = await tornadoTrees.depositsLength()
+      const _deposits = await tornadoTrees.getRegisteredDeposits()
       expect(count).to.be.equal(notes.length)
       _deposits.forEach((hash, i) => {
         const encodedData = abi.encode(
@@ -149,7 +150,8 @@ describe('TornadoTrees', function () {
   describe('#getRegisteredWithdrawals', () => {
     it('should work', async () => {
       const abi = new ethers.utils.AbiCoder()
-      let { count, _withdrawals } = await tornadoTrees.getRegisteredWithdrawals()
+      const count = await tornadoTrees.withdrawalsLength()
+      const _withdrawals = await tornadoTrees.getRegisteredWithdrawals()
       expect(count).to.be.equal(notes.length)
       _withdrawals.forEach((hash, i) => {
         const encodedData = abi.encode(

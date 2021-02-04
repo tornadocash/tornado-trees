@@ -37,9 +37,12 @@ contract TornadoTreesMock is TornadoTrees {
     uint256 _withdrawBlockNumber
   ) public {
     setBlockNumber(_depositBlockNumber);
-    deposits.push(keccak256(abi.encode(_instance, _commitment, blockNumber())));
+    deposits[depositsLength] = keccak256(abi.encode(_instance, _commitment, blockNumber()));
+    depositsLength++;
+
     setBlockNumber(_withdrawBlockNumber);
-    withdrawals.push(keccak256(abi.encode(_instance, _nullifier, blockNumber())));
+    withdrawals[withdrawalsLength] = keccak256(abi.encode(_instance, _nullifier, blockNumber()));
+    withdrawalsLength++;
   }
 
   function updateDepositTreeMock(
