@@ -17,6 +17,7 @@ contract TornadoTrees is EnsResolve {
   bytes32 public previousWithdrawalRoot;
   address public tornadoProxy;
   IVerifier public treeUpdateVerifier;
+  ITornadoTreesV1 public immutable tornadoTreesV1;
 
   // make sure CHUNK_TREE_HEIGHT has the same value in BatchTreeUpdate.circom
   uint256 public constant CHUNK_TREE_HEIGHT = 2;
@@ -28,12 +29,12 @@ contract TornadoTrees is EnsResolve {
   mapping(uint256 => bytes32) public deposits;
   uint256 public depositsLength;
   uint256 public lastProcessedDepositLeaf;
+  uint256 public immutable lastV1Deposit;
 
   mapping(uint256 => bytes32) public withdrawals;
   uint256 public withdrawalsLength;
   uint256 public lastProcessedWithdrawalLeaf;
-
-  bool public initialized;
+  uint256 public immutable lastV1Withdrawal;
 
   event DepositData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
   event WithdrawalData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
@@ -61,11 +62,6 @@ contract TornadoTrees is EnsResolve {
     _;
   }
 
-  modifier onlyInitialized() {
-    require(initialized, "The contract is in the process of the migration");
-    _;
-  }
-
   constructor(
     address _governance,
     address _tornadoProxy,
@@ -75,6 +71,7 @@ contract TornadoTrees is EnsResolve {
     governance = _governance;
     tornadoProxy = _tornadoProxy;
     treeUpdateVerifier = _treeUpdateVerifier;
+    tornadoTreesV1 = _tornadoTreesV1;
 
     depositRoot = _tornadoTreesV1.depositRoot();
     withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
@@ -82,84 +79,24 @@ contract TornadoTrees is EnsResolve {
     uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedDepositLeaf = depositLeaf;
+    lastV1Deposit = 1; // todo
 
     uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
     require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedWithdrawalLeaf = withdrawalLeaf;
-
-    uint256 i = depositLeaf;
-    while (true) {
-      (bool success, bytes memory data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }( // todo define more specise gas value.
-        abi.encodeWithSignature("deposits(uint256)", i)
-      );
-      if (!success) {
-        break;
-      }
-      bytes32 deposit = abi.decode(data, (bytes32));
-      deposits[i] = deposit;
-      i++;
-    }
-    depositsLength = depositLeaf + i;
-
-    i = withdrawalLeaf;
-    while (true) {
-      (bool success, bytes memory data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(
-        abi.encodeWithSignature("withdrawals(uint256)", i)
-      );
-
-      if (!success) {
-        break;
-      }
-      bytes32 withdrawal = abi.decode(data, (bytes32));
-      withdrawals[i] = withdrawal;
-      i++;
-    }
-    withdrawalsLength = withdrawalLeaf + i;
+    lastV1Withdrawal = 1; // todo
   }
 
-  function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy onlyInitialized {
+  function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy {
     uint256 _depositsLength = depositsLength;
     deposits[_depositsLength] = keccak256(abi.encode(_instance, _commitment, blockNumber()));
     emit DepositData(_instance, _commitment, blockNumber(), _depositsLength - 1);
   }
 
-  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external onlyTornadoProxy onlyInitialized {
+  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external onlyTornadoProxy {
     uint256 _withdrawalsLength = withdrawalsLength;
     withdrawals[_withdrawalsLength] = keccak256(abi.encode(_instance, _nullifierHash, blockNumber()));
     emit WithdrawalData(_instance, _nullifierHash, blockNumber(), _withdrawalsLength - 1);
-  }
-
-  function migrate(TreeLeaf[] calldata _depositEvents, TreeLeaf[] calldata _withdrawalEvents) external {
-    require(!initialized, "Already migrated");
-    uint256 _lastProcessedDepositLeaf = lastProcessedDepositLeaf;
-    uint256 _depositLength = depositsLength;
-    for (uint256 i = 0; i < _depositLength - _lastProcessedDepositLeaf; i++) {
-      bytes32 leafHash = keccak256(abi.encode(_depositEvents[i].instance, _depositEvents[i].hash, _depositEvents[i].block));
-      require(leafHash == deposits[_lastProcessedDepositLeaf + i], "Incorrect deposit");
-      emit DepositData(
-        _depositEvents[i].instance,
-        _depositEvents[i].hash,
-        _depositEvents[i].block,
-        _lastProcessedDepositLeaf + i
-      );
-    }
-
-    uint256 _withdrawalLength = withdrawalsLength;
-    uint256 _lastProcessedWithdrawalLeaf = lastProcessedWithdrawalLeaf;
-    for (uint256 i = 0; i < _withdrawalLength - _lastProcessedWithdrawalLeaf; i++) {
-      bytes32 leafHash = keccak256(
-        abi.encode(_withdrawalEvents[i].instance, _withdrawalEvents[i].hash, _withdrawalEvents[i].block)
-      );
-      require(leafHash == withdrawals[_lastProcessedWithdrawalLeaf + i], "Incorrect deposit");
-      emit DepositData(
-        _withdrawalEvents[i].instance,
-        _withdrawalEvents[i].hash,
-        _withdrawalEvents[i].block,
-        _lastProcessedWithdrawalLeaf + i
-      );
-    }
-
-    initialized = true;
   }
 
   function updateDepositTree(
@@ -169,7 +106,7 @@ contract TornadoTrees is EnsResolve {
     bytes32 _newRoot,
     uint32 _pathIndices,
     TreeLeaf[CHUNK_SIZE] calldata _events
-  ) public onlyInitialized {
+  ) public {
     uint256 offset = lastProcessedDepositLeaf;
     require(_newRoot != previousDepositRoot, "Outdated deposit root");
     require(_currentRoot == depositRoot, "Proposed deposit root is invalid");
@@ -181,16 +118,22 @@ contract TornadoTrees is EnsResolve {
       mstore(add(data, 0x40), _newRoot)
       mstore(add(data, 0x20), _currentRoot)
     }
+    uint256 _lastV1Deposit = lastV1Deposit;
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
       (bytes32 hash, address instance, uint32 blockNumber) = (_events[i].hash, _events[i].instance, _events[i].block);
       bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
-      require(leafHash == deposits[offset + i], "Incorrect deposit");
+      bytes32 deposit = offset + i > _lastV1Deposit ? deposits[offset + i] : tornadoTreesV1.deposits(offset + i);
+      require(leafHash == deposit, "Incorrect deposit");
       assembly {
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
       }
-      delete deposits[offset + i];
+      if (offset + i > _lastV1Deposit) {
+        delete deposits[offset + i];
+      } else {
+        emit DepositData(instance, hash, blockNumber, offset + i);
+      }
     }
 
     uint256 argsHash = uint256(sha256(data)) % SNARK_FIELD;
@@ -209,7 +152,7 @@ contract TornadoTrees is EnsResolve {
     bytes32 _newRoot,
     uint256 _pathIndices,
     TreeLeaf[CHUNK_SIZE] calldata _events
-  ) public onlyInitialized {
+  ) public {
     uint256 offset = lastProcessedWithdrawalLeaf;
     require(_newRoot != previousWithdrawalRoot, "Outdated withdrawal root");
     require(_currentRoot == withdrawalRoot, "Proposed withdrawal root is invalid");
@@ -222,17 +165,23 @@ contract TornadoTrees is EnsResolve {
       mstore(add(data, 0x40), _newRoot)
       mstore(add(data, 0x20), _currentRoot)
     }
+    uint256 _lastV1Withdrawal = lastV1Withdrawal;
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
       (bytes32 hash, address instance, uint32 blockNumber) = (_events[i].hash, _events[i].instance, _events[i].block);
       bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
-      require(leafHash == withdrawals[offset + i], "Incorrect withdrawal");
+      bytes32 withdrawal = offset + i > _lastV1Withdrawal ? withdrawals[offset + i] : tornadoTreesV1.withdrawals(offset + i);
+      require(leafHash == withdrawal, "Incorrect withdrawal");
       require(uint256(hash) < SNARK_FIELD, "Hash out of range");
       assembly {
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
       }
-      delete withdrawals[offset + i];
+      if (offset + i > _lastV1Withdrawal) {
+        delete withdrawals[offset + i];
+      } else {
+        emit WithdrawalData(instance, hash, blockNumber, offset + i);
+      }
     }
 
     uint256 argsHash = uint256(sha256(data)) % SNARK_FIELD;
