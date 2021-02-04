@@ -79,12 +79,13 @@ contract TornadoTrees is EnsResolve {
     uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedDepositLeaf = depositLeaf;
-    lastV1Deposit = 1; // todo
+    depositsLength = lastV1Deposit = 1; // todo
+
 
     uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
     require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedWithdrawalLeaf = withdrawalLeaf;
-    lastV1Withdrawal = 1; // todo
+    withdrawalsLength = lastV1Withdrawal = 1; // todo
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy {
