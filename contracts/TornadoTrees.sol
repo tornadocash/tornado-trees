@@ -87,10 +87,11 @@ contract TornadoTrees is EnsResolve {
 
     uint256 i = depositLeaf;
 
-    todo deposits.length = _tornadoTreesV1.deposits.length
+    // todo deposits.length = _tornadoTreesV1.deposits.length
     while (true) {
-      (bool success, bytes memory data) = address(_tornadoTreesV1).call(abi.encodeWithSignature("deposits(uint256)", i));
-      // console.log("success", success);
+      (bool success, bytes memory data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }( // todo define more specise gas value.
+        abi.encodeWithSignature("deposits(uint256)", i)
+      );
       if (!success) {
         break;
       }
@@ -99,23 +100,19 @@ contract TornadoTrees is EnsResolve {
       deposits.push(deposit);
     }
 
-    uint256 j = withdrawalLeaf;
+    i = withdrawalLeaf;
     while (true) {
-      (bool success1, bytes memory data1) = address(_tornadoTreesV1).staticcall(
-        abi.encodeWithSignature("withdrawals(uint256)", j)
+      (bool success, bytes memory data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(
+        abi.encodeWithSignature("withdrawals(uint256)", i)
       );
-      // console.log("success", success);
-      // console.logBytes(data);
 
-      if (!success1) {
+      if (!success) {
         break;
       }
-      bytes32 withdrawal = abi.decode(data1, (bytes32));
-      // console.logBytes32(withdrawal);
-      j++;
+      bytes32 withdrawal = abi.decode(data, (bytes32));
+      i++;
       withdrawals.push(withdrawal);
     }
-    console.log("end");
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy onlyInitialized {

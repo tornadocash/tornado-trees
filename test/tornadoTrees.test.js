@@ -16,8 +16,6 @@ async function register(note, tornadoTrees, from) {
     )
 }
 
-const toEns = (addr) => toFixedHex(addr, 20).padEnd(66, '0')
-
 const levels = 20
 const CHUNK_TREE_HEIGHT = 2
 
@@ -78,7 +76,6 @@ describe('TornadoTrees', function () {
       tornadoProxy.address,
       tornadoTreesV1.address,
       verifier.address,
-      // { gasLimit: 30e6 },
     )
     await tornadoTrees.migrate(depositEvents, withdrawalEvents)
   })
@@ -90,7 +87,7 @@ describe('TornadoTrees', function () {
       expect(solHash).to.be.equal(args[0])
     })
 
-    it.only('should prove snark', async () => {
+    it('should prove snark', async () => {
       const { input, args } = controller.batchTreeUpdate(tree, depositEvents)
       const proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
       await tornadoTrees.updateDepositTree(proof, ...args)
