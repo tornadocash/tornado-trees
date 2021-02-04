@@ -7,6 +7,8 @@ import "torn-token/contracts/ENS.sol";
 import "./interfaces/ITornadoTreesV1.sol";
 import "./interfaces/IVerifier.sol";
 
+import "hardhat/console.sol";
+
 contract TornadoTrees is EnsResolve {
   address public immutable governance;
   bytes32 public depositRoot;
@@ -75,35 +77,45 @@ contract TornadoTrees is EnsResolve {
     depositRoot = _tornadoTreesV1.depositRoot();
     withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
 
-    uint256 _lastProcessedDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
-    require(_lastProcessedDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees contract state");
-    lastProcessedDepositLeaf = _lastProcessedDepositLeaf;
+    uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
+    require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedDepositLeaf = depositLeaf;
 
-    uint256 _lastProcessedWithdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
-    require(_lastProcessedWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees contract state");
-    lastProcessedWithdrawalLeaf = _lastProcessedWithdrawalLeaf;
+    uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
+    require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedWithdrawalLeaf = withdrawalLeaf;
 
-    uint256 i = _lastProcessedDepositLeaf + 1;
+    uint256 i = depositLeaf;
 
-    // todo deposits.length = _tornadoTreesV1.deposits.length
+    todo deposits.length = _tornadoTreesV1.deposits.length
     while (true) {
-      bytes32 deposit = _tornadoTreesV1.deposits(i);
-      if (deposit == bytes32(0)) {
+      (bool success, bytes memory data) = address(_tornadoTreesV1).call(abi.encodeWithSignature("deposits(uint256)", i));
+      // console.log("success", success);
+      if (!success) {
         break;
       }
+      bytes32 deposit = abi.decode(data, (bytes32));
       i++;
       deposits.push(deposit);
     }
 
-    i = _lastProcessedWithdrawalLeaf + 1;
+    uint256 j = withdrawalLeaf;
     while (true) {
-      bytes32 withdrawal = _tornadoTreesV1.withdrawals(i);
-      if (withdrawal == bytes32(0)) {
+      (bool success1, bytes memory data1) = address(_tornadoTreesV1).staticcall(
+        abi.encodeWithSignature("withdrawals(uint256)", j)
+      );
+      // console.log("success", success);
+      // console.logBytes(data);
+
+      if (!success1) {
         break;
       }
-      i++;
+      bytes32 withdrawal = abi.decode(data1, (bytes32));
+      // console.logBytes32(withdrawal);
+      j++;
       withdrawals.push(withdrawal);
     }
+    console.log("end");
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy onlyInitialized {
@@ -149,9 +161,6 @@ contract TornadoTrees is EnsResolve {
     initialized = true;
   }
 
-  // если чтото загрузит руты на старый контракт во время миграции то пизда
-
-  // todo !!! ensure that during migration the tree is filled evenly
   function updateDepositTree(
     bytes calldata _proof,
     bytes32 _argsHash,

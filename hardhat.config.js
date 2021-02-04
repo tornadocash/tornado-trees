@@ -20,6 +20,9 @@ task('accounts', 'Prints the list of accounts', async () => {
 module.exports = {
   solidity: '0.6.12',
   networks: {
+    hardhat: {
+      blockGasLimit: 950000000,
+    },
     goerli: {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`,
       accounts: [process.env.PRIVATE_KEY],

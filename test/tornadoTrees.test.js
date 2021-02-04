@@ -36,6 +36,7 @@ describe('TornadoTrees', function () {
   let tornadoProxy
   let verifier
   let tornadoTrees
+  let tornadoTreesV1
   let notes
   const depositEvents = []
   const withdrawalEvents = []
@@ -47,14 +48,8 @@ describe('TornadoTrees', function () {
     const BatchTreeUpdateVerifier = await ethers.getContractFactory('BatchTreeUpdateVerifier')
     verifier = await BatchTreeUpdateVerifier.deploy()
 
-    const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
-    tornadoTrees = await TornadoTrees.deploy(
-      toEns(operator.address),
-      toEns(tornadoProxy.address),
-      toEns(verifier.address),
-      toFixedHex(tree.root()),
-      toFixedHex(tree.root()),
-    )
+    const TornadoTreesV1 = await ethers.getContractFactory('TornadoTreesV1Mock')
+    tornadoTreesV1 = await TornadoTreesV1.deploy(0, 0, tree.root(), tree.root())
 
     notes = []
     for (let i = 0; i < 2 ** CHUNK_TREE_HEIGHT; i++) {
@@ -65,7 +60,7 @@ describe('TornadoTrees', function () {
         commitment: randomBN(),
         nullifierHash: randomBN(),
       }
-      await register(notes[i], tornadoTrees, tornadoProxy)
+      await register(notes[i], tornadoTreesV1, tornadoProxy)
       depositEvents[i] = {
         hash: toFixedHex(notes[i].commitment),
         instance: toFixedHex(notes[i].instance, 20),
@@ -77,6 +72,15 @@ describe('TornadoTrees', function () {
         block: toFixedHex(notes[i].withdrawalBlock, 4),
       }
     }
+    const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
+    tornadoTrees = await TornadoTrees.deploy(
+      operator.address,
+      tornadoProxy.address,
+      tornadoTreesV1.address,
+      verifier.address,
+      // { gasLimit: 30e6 },
+    )
+    await tornadoTrees.migrate(depositEvents, withdrawalEvents)
   })
 
   describe('#updateDepositTree', () => {
@@ -86,7 +90,7 @@ describe('TornadoTrees', function () {
       expect(solHash).to.be.equal(args[0])
     })
 
-    it('should prove snark', async () => {
+    it.only('should prove snark', async () => {
       const { input, args } = controller.batchTreeUpdate(tree, depositEvents)
       const proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
       await tornadoTrees.updateDepositTree(proof, ...args)
