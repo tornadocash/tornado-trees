@@ -17,15 +17,19 @@ task('accounts', 'Prints the list of accounts', async () => {
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+const config = {
   solidity: '0.6.12',
   networks: {
     hardhat: {
       blockGasLimit: 950000000,
     },
-    goerli: {
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`,
-      accounts: [process.env.PRIVATE_KEY],
-    },
   },
 }
+
+if (process.env.NETWORK) {
+  config.networks[process.env.NETWORK] = {
+    url: `https://${process.env.NETWORK}.infura.io/v3/${process.env.INFURA_TOKEN}`,
+    accounts: [process.env.PRIVATE_KEY],
+  }
+}
+module.exports = config
