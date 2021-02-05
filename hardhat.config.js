@@ -24,6 +24,9 @@ const config = {
       blockGasLimit: 950000000,
     },
   },
+  mocha: {
+    timeout: 600000,
+  },
 }
 
 if (process.env.NETWORK) {

@@ -36,6 +36,7 @@ describe('TornadoTrees', function () {
   let tornadoTrees
   let tornadoTreesV1
   let notes
+  let depositDataEventFilter
   const depositEvents = []
   const withdrawalEvents = []
 
@@ -77,6 +78,7 @@ describe('TornadoTrees', function () {
       tornadoTreesV1.address,
       verifier.address,
     )
+    depositDataEventFilter = tornadoTrees.filters.DepositData()
   })
 
   describe('#updateDepositTree', () => {
@@ -119,8 +121,7 @@ describe('TornadoTrees', function () {
       let updatedRoot = await tornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
 
-      const filter = tornadoTrees.filters.DepositData()
-      const migratedEvents = await tornadoTrees.queryFilter(filter)
+      const migratedEvents = await tornadoTrees.queryFilter(depositDataEventFilter)
       migratedEvents.forEach((e, i) => {
         expect(e.args.index).to.be.equal(i)
       })
@@ -128,18 +129,72 @@ describe('TornadoTrees', function () {
       for (let i = 0; i < notes.length; i++) {
         await register(notes[i], tornadoTrees, tornadoProxy)
       }
-      let registeredEvents = await tornadoTrees.queryFilter(filter)
+      let registeredEvents = await tornadoTrees.queryFilter(depositDataEventFilter)
       registeredEvents = registeredEvents.map((e) => ({
         hash: toFixedHex(e.args.hash),
         instance: toFixedHex(e.args.instance, 20),
         block: toFixedHex(e.args.block, 4),
       }))
-      ;({ input, args } = controller.batchTreeUpdate(tree, registeredEvents))
+      ;({ input, args } = controller.batchTreeUpdate(tree, registeredEvents.slice(0, 4)))
       proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
       await tornadoTrees.updateDepositTree(proof, ...args)
       updatedRoot = await tornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
     })
+    // it('should work for batch+N filled v1 tree', async () => {
+    //   for (let i = 4; i < 6; i++) {
+    //     notes.push({
+    //       instance: instances[i % instances.length],
+    //       depositBlock: blocks[i % blocks.length],
+    //       withdrawalBlock: 2 + i + i * 4 * 60 * 24,
+    //       commitment: randomBN(),
+    //       nullifierHash: randomBN(),
+    //     })
+    //     await register(notes[i], tornadoTreesV1, tornadoProxy)
+    //   }
+
+    //   const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
+    //   const newTornadoTrees = await TornadoTrees.deploy(
+    //     operator.address,
+    //     tornadoProxy.address,
+    //     tornadoTreesV1.address,
+    //     verifier.address,
+    //   )
+
+    //   let { input, args } = controller.batchTreeUpdate(tree, depositEvents)
+    //   let proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+    //   await newTornadoTrees.updateDepositTree(proof, ...args)
+    //   let updatedRoot = await newTornadoTrees.depositRoot()
+    //   expect(updatedRoot).to.be.equal(tree.root())
+
+    //   // register 6 new deposits for the new trees
+    //   for (let i = 0; i < notes.length; i++) {
+    //     await register(notes[i], newTornadoTrees, tornadoProxy)
+    //   }
+
+    //   // get 2 events from v1 tress
+    //   const events = notes.slice(4).map((note) => ({
+    //     hash: toFixedHex(note.commitment),
+    //     instance: toFixedHex(note.instance, 20),
+    //     block: toFixedHex(note.depositBlock, 4),
+    //   }))
+
+    //   const registeredEvents = await newTornadoTrees.queryFilter(depositDataEventFilter)
+    //   console.log('registeredEvents', JSON.stringify(registeredEvents, null, 2))
+    //   // events = events.concat(
+    //   //   registeredEvents.slice(0, 2).map((e) => ({
+    //   //     hash: toFixedHex(e.args.hash),
+    //   //     instance: toFixedHex(e.args.instance, 20),
+    //   //     block: toFixedHex(e.args.block, 4),
+    //   //   })),
+    //   // )
+    //   // console.log('events', events)
+    //   // ;({ input, args } = controller.batchTreeUpdate(tree, events))
+    //   // proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+    //   // await newTornadoTrees.updateDepositTree(proof, ...args)
+    //   // updatedRoot = await newTornadoTrees.depositRoot()
+    //   // expect(updatedRoot).to.be.equal(tree.root())
+    // })
     it('should reject for partially filled tree')
     it('should reject for outdated deposit root')
     it('should reject for incorrect insert index')

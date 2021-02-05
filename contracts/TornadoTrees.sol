@@ -79,42 +79,40 @@ contract TornadoTrees is EnsResolve {
     uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedDepositLeaf = depositLeaf;
-    depositsLength = depositV1Length = 4; // todo
+    depositsLength = depositV1Length = findArrayLength(_tornadoTreesV1, "deposits(uint256)", 3); // todo
 
     uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
     require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedWithdrawalLeaf = withdrawalLeaf;
-    withdrawalsLength = withdrawalsV1Length = 4; // todo
+    withdrawalsLength = withdrawalsV1Length = findArrayLength(_tornadoTreesV1, "withdrawals(uint256)", 3); // todo
   }
 
   // todo implement binary search
-  function findDepositLength(
+  function findArrayLength(
     ITornadoTreesV1 _tornadoTreesV1,
-    uint256 _from,
-    uint256 _to
+    string memory _signature,
+    uint256 _from
   ) public view returns (uint256) {
     bool success;
     bytes memory data;
-    uint256 previousTo;
 
-    (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature("deposits(uint256)", _to));
-    while (!success) {
-      previousTo = _to;
-      _to = (_from + _to) / 2;
-      (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature("deposits(uint256)", _to));
+    (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature(_signature, _from));
+    while (success) {
+      _from++;
+      (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature(_signature, _from));
     }
 
-    return _to;
+    return _from;
   }
 
-  function registerDeposit(address _instance, bytes32 _commitment) external onlyTornadoProxy {
+  function registerDeposit(address _instance, bytes32 _commitment) public onlyTornadoProxy {
     uint256 _depositsLength = depositsLength;
     deposits[_depositsLength] = keccak256(abi.encode(_instance, _commitment, blockNumber()));
     emit DepositData(_instance, _commitment, blockNumber(), _depositsLength);
     depositsLength = _depositsLength + 1;
   }
 
-  function registerWithdrawal(address _instance, bytes32 _nullifierHash) external onlyTornadoProxy {
+  function registerWithdrawal(address _instance, bytes32 _nullifierHash) public onlyTornadoProxy {
     uint256 _withdrawalsLength = withdrawalsLength;
     withdrawals[_withdrawalsLength] = keccak256(abi.encode(_instance, _nullifierHash, blockNumber()));
     emit WithdrawalData(_instance, _nullifierHash, blockNumber(), _withdrawalsLength);
