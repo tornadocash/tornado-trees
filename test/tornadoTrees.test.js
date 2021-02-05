@@ -77,7 +77,6 @@ describe('TornadoTrees', function () {
       tornadoTreesV1.address,
       verifier.address,
     )
-    await tornadoTrees.migrate(depositEvents, withdrawalEvents)
   })
 
   describe('#updateDepositTree', () => {
@@ -121,18 +120,34 @@ describe('TornadoTrees', function () {
 
   describe('#getRegisteredDeposits', () => {
     it('should work', async () => {
+      for (let i = 0; i < 2 ** CHUNK_TREE_HEIGHT; i++) {
+        notes[i] = {
+          instance: instances[i % instances.length],
+          depositBlock: blocks[i % blocks.length],
+          withdrawalBlock: 2 + i + i * 4 * 60 * 24,
+          commitment: randomBN(),
+          nullifierHash: randomBN(),
+        }
+        await register(notes[i], tornadoTrees, tornadoProxy)
+      }
+
       const abi = new ethers.utils.AbiCoder()
       const count = await tornadoTrees.depositsLength()
       const _deposits = await tornadoTrees.getRegisteredDeposits()
-      expect(count).to.be.equal(notes.length)
+      expect(count).to.be.equal(notes.length * 2)
       _deposits.forEach((hash, i) => {
-        const encodedData = abi.encode(
-          ['address', 'bytes32', 'uint256'],
-          [notes[i].instance, toFixedHex(notes[i].commitment), notes[i].depositBlock],
-        )
-        const leaf = ethers.utils.keccak256(encodedData)
+        if (i < notes.length) {
+          expect(hash).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
+        } else {
+          const index = i - notes.length
+          const encodedData = abi.encode(
+            ['address', 'bytes32', 'uint256'],
+            [notes[index].instance, toFixedHex(notes[index].commitment), notes[index].depositBlock],
+          )
+          const leaf = ethers.utils.keccak256(encodedData)
 
-        expect(leaf).to.be.equal(hash)
+          expect(leaf).to.be.equal(hash)
+        }
       })
       // res.length.should.be.equal(1)
       // res[0].should.be.true
@@ -149,18 +164,34 @@ describe('TornadoTrees', function () {
 
   describe('#getRegisteredWithdrawals', () => {
     it('should work', async () => {
+      for (let i = 0; i < 2 ** CHUNK_TREE_HEIGHT; i++) {
+        notes[i] = {
+          instance: instances[i % instances.length],
+          depositBlock: blocks[i % blocks.length],
+          withdrawalBlock: 2 + i + i * 4 * 60 * 24,
+          commitment: randomBN(),
+          nullifierHash: randomBN(),
+        }
+        await register(notes[i], tornadoTrees, tornadoProxy)
+      }
+
       const abi = new ethers.utils.AbiCoder()
       const count = await tornadoTrees.withdrawalsLength()
       const _withdrawals = await tornadoTrees.getRegisteredWithdrawals()
-      expect(count).to.be.equal(notes.length)
+      expect(count).to.be.equal(notes.length * 2)
       _withdrawals.forEach((hash, i) => {
-        const encodedData = abi.encode(
-          ['address', 'bytes32', 'uint256'],
-          [notes[i].instance, toFixedHex(notes[i].nullifierHash), notes[i].withdrawalBlock],
-        )
-        const leaf = ethers.utils.keccak256(encodedData)
+        if (i < notes.length) {
+          expect(hash).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000')
+        } else {
+          const index = i - notes.length
+          const encodedData = abi.encode(
+            ['address', 'bytes32', 'uint256'],
+            [notes[index].instance, toFixedHex(notes[index].nullifierHash), notes[index].withdrawalBlock],
+          )
+          const leaf = ethers.utils.keccak256(encodedData)
 
-        expect(leaf).to.be.equal(hash)
+          expect(leaf).to.be.equal(hash)
+        }
       })
     })
   })
