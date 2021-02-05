@@ -111,6 +111,33 @@ describe('TornadoTrees', function () {
       updatedRoot = await tornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
     })
+
+    it('should work with events from contracts', async () => {
+      let { input, args } = controller.batchTreeUpdate(tree, depositEvents)
+      let proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+      await tornadoTrees.updateDepositTree(proof, ...args)
+      let updatedRoot = await tornadoTrees.depositRoot()
+      expect(updatedRoot).to.be.equal(tree.root())
+
+      const filter = tornadoTrees.filters.DepositData()
+      const migratedEvents = await tornadoTrees.queryFilter(filter)
+      console.log('events', JSON.stringify(migratedEvents, null, 2))
+      //
+      for (let i = 0; i < notes.length; i++) {
+        await register(notes[i], tornadoTrees, tornadoProxy)
+      }
+      let registeredEvents = await tornadoTrees.queryFilter(filter)
+      registeredEvents = registeredEvents.map((e) => ({
+        hash: toFixedHex(e.args.hash),
+        instance: toFixedHex(e.args.instance, 20),
+        block: toFixedHex(e.args.block, 4),
+      }))
+      ;({ input, args } = controller.batchTreeUpdate(tree, registeredEvents))
+      proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
+      await tornadoTrees.updateDepositTree(proof, ...args)
+      updatedRoot = await tornadoTrees.depositRoot()
+      expect(updatedRoot).to.be.equal(tree.root())
+    })
     it('should reject for partially filled tree')
     it('should reject for outdated deposit root')
     it('should reject for incorrect insert index')
