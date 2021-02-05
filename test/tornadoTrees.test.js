@@ -121,7 +121,9 @@ describe('TornadoTrees', function () {
 
       const filter = tornadoTrees.filters.DepositData()
       const migratedEvents = await tornadoTrees.queryFilter(filter)
-      console.log('events', JSON.stringify(migratedEvents, null, 2))
+      migratedEvents.forEach((e, i) => {
+        expect(e.args.index).to.be.equal(i)
+      })
       //
       for (let i = 0; i < notes.length; i++) {
         await register(notes[i], tornadoTrees, tornadoProxy)
