@@ -41,6 +41,22 @@ contract TornadoTreesV1Mock {
     withdrawals.push(keccak256(abi.encode(_instance, _nullifier, blockNumber())));
   }
 
+  function getRegisteredDeposits() external view returns (bytes32[] memory _deposits) {
+    uint256 count = deposits.length - lastProcessedDepositLeaf;
+    _deposits = new bytes32[](count);
+    for (uint256 i = 0; i < count; i++) {
+      _deposits[i] = deposits[lastProcessedDepositLeaf + i];
+    }
+  }
+
+  function getRegisteredWithdrawals() external view returns (bytes32[] memory _withdrawals) {
+    uint256 count = withdrawals.length - lastProcessedWithdrawalLeaf;
+    _withdrawals = new bytes32[](count);
+    for (uint256 i = 0; i < count; i++) {
+      _withdrawals[i] = withdrawals[lastProcessedWithdrawalLeaf + i];
+    }
+  }
+
   function setLastProcessedDepositLeaf(uint256 _lastProcessedDepositLeaf) public {
     lastProcessedDepositLeaf = _lastProcessedDepositLeaf;
   }
