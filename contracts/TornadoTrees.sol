@@ -62,11 +62,19 @@ contract TornadoTrees is EnsResolve {
     _;
   }
 
+  struct SearchParams {
+    uint256 unprocessedDeposits;
+    uint256 unprocessedWithdrawals;
+    uint256 depositsPerDay;
+    uint256 withdrawalsPerDay;
+  }
+
   constructor(
     address _governance,
     address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IVerifier _treeUpdateVerifier
+    IVerifier _treeUpdateVerifier,
+    SearchParams memory _searchParams
   ) public {
     governance = _governance;
     tornadoProxy = _tornadoProxy;
@@ -79,30 +87,63 @@ contract TornadoTrees is EnsResolve {
     uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedDepositLeaf = depositLeaf;
-    depositsLength = depositV1Length = findArrayLength(_tornadoTreesV1, "deposits(uint256)", 3); // todo
+    depositsLength = depositV1Length = findArrayLength(
+      _tornadoTreesV1,
+      "deposits(uint256)",
+      _searchParams.unprocessedDeposits,
+      _searchParams.depositsPerDay
+    );
 
     uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
     require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedWithdrawalLeaf = withdrawalLeaf;
-    withdrawalsLength = withdrawalsV1Length = findArrayLength(_tornadoTreesV1, "withdrawals(uint256)", 3); // todo
+    withdrawalsLength = withdrawalsV1Length = findArrayLength(
+      _tornadoTreesV1,
+      "withdrawals(uint256)",
+      _searchParams.unprocessedWithdrawals,
+      _searchParams.withdrawalsPerDay
+    );
   }
 
-  // todo implement binary search
   function findArrayLength(
     ITornadoTreesV1 _tornadoTreesV1,
-    string memory _signature,
-    uint256 _from
+    string memory _type,
+    uint256 _from,
+    uint256 _step
   ) public view returns (uint256) {
-    bool success;
-    bytes memory data;
+    require(_from != 0 && _step != 0, "_from and _step should be > 0");
+    require(elementExists(_tornadoTreesV1, _type, _from), "Inccorrect _from param");
 
-    (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature(_signature, _from));
-    while (success) {
-      _from++;
-      (success, data) = address(_tornadoTreesV1).staticcall{ gas: 3000 }(abi.encodeWithSignature(_signature, _from));
+    uint256 index = _from + _step;
+    while (elementExists(_tornadoTreesV1, _type, index)) {
+      index = index + _step;
     }
 
-    return _from;
+    uint256 high = index;
+    uint256 low = index - _step;
+    uint256 mid = (low + high) / 2;
+    while (!elementExists(_tornadoTreesV1, _type, mid)) {
+      high = mid - 1;
+      mid = (low + high) / 2;
+    }
+
+    high += 1;
+    low = mid + 1;
+    mid = (low + high) / 2;
+    while (elementExists(_tornadoTreesV1, _type, mid)) {
+      low = mid + 1;
+      mid = (low + high) / 2;
+    }
+
+    return high == low ? high : low;
+  }
+
+  function elementExists(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 index
+  ) public view returns (bool success) {
+    (success, ) = address(_tornadoTreesV1).staticcall{ gas: 2500 }(abi.encodeWithSignature(_type, index));
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) public onlyTornadoProxy {

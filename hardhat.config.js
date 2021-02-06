@@ -21,7 +21,7 @@ const config = {
   solidity: '0.6.12',
   networks: {
     hardhat: {
-      blockGasLimit: 950000000,
+      blockGasLimit: 9500000,
     },
   },
   mocha: {

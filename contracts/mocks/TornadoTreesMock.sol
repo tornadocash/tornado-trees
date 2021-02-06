@@ -14,8 +14,9 @@ contract TornadoTreesMock is TornadoTrees {
     address _governance,
     address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IVerifier _treeUpdateVerifier
-  ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier) {}
+    IVerifier _treeUpdateVerifier,
+    SearchParams memory _searchParams
+  ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier, _searchParams) {}
 
   function resolve(bytes32 _addr) public view override returns (address) {
     return address(uint160(uint256(_addr) >> (12 * 8)));

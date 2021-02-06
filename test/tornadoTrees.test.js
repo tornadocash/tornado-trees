@@ -77,6 +77,12 @@ describe('TornadoTrees', function () {
       tornadoProxy.address,
       tornadoTreesV1.address,
       verifier.address,
+      {
+        unprocessedDeposits: 1,
+        unprocessedWithdrawals: 1,
+        depositsPerDay: 2,
+        withdrawalsPerDay: 2,
+      },
     )
     depositDataEventFilter = tornadoTrees.filters.DepositData()
   })
@@ -159,6 +165,12 @@ describe('TornadoTrees', function () {
         tornadoProxy.address,
         tornadoTreesV1.address,
         verifier.address,
+        {
+          unprocessedDeposits: 1,
+          unprocessedWithdrawals: 1,
+          depositsPerDay: 2,
+          withdrawalsPerDay: 2,
+        },
       )
 
       let { input, args } = controller.batchTreeUpdate(tree, depositEvents)
