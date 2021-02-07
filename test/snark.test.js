@@ -1,7 +1,7 @@
 const { expect } = require('chai')
 const MerkleTree = require('fixed-merkle-tree')
 const { poseidonHash2, randomBN } = require('../src/utils')
-const { batchTreeUpdate, prove } = require('../src/controller')
+const { batchTreeUpdate, prove } = require('../src/index')
 
 const levels = 20
 const CHUNK_TREE_HEIGHT = 2

@@ -4,7 +4,7 @@
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 const hre = require('hardhat')
-const { toFixedHex, poseidonHash2, randomBN } = require('../src/utils')
+const { toFixedHex, poseidonHash2 } = require('../src/utils')
 const MerkleTree = require('fixed-merkle-tree')
 const abi = new hre.ethers.utils.AbiCoder()
 const instances = [

@@ -1,8 +1,14 @@
 {
   "name": "hardhat-project",
+  "version": "0.0.1",
+  "main": "src/index.js",
   "repository": "https://github.com/tornadocash/tornado-trees.git",
   "author": "Tornadocash team <hello@tornado.cash>",
   "license": "MIT",
+  "files": [
+    "src/*",
+    "contracts/*"
+  ],
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",

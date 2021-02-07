@@ -2,7 +2,7 @@
 const { expect } = require('chai')
 const { toFixedHex, poseidonHash2, randomBN } = require('../src/utils')
 const MerkleTree = require('fixed-merkle-tree')
-const controller = require('../src/controller')
+const controller = require('../src/index')
 
 async function register(note, tornadoTrees, from) {
   await tornadoTrees
