@@ -105,6 +105,7 @@ contract TornadoTrees is EnsResolve {
     );
   }
 
+  // todo make things internal. Think of dedundant calls
   function findArrayLength(
     ITornadoTreesV1 _tornadoTreesV1,
     string memory _type,
@@ -112,7 +113,7 @@ contract TornadoTrees is EnsResolve {
     uint256 _step
   ) public view returns (uint256) {
     require(_from != 0 && _step != 0, "_from and _step should be > 0");
-    require(elementExists(_tornadoTreesV1, _type, _from), "Inccorrect _from param");
+    // require(elementExists(_tornadoTreesV1, _type, _from), "Inccorrect _from param");
 
     uint256 index = _from + _step;
     while (elementExists(_tornadoTreesV1, _type, index)) {
@@ -121,21 +122,38 @@ contract TornadoTrees is EnsResolve {
 
     uint256 high = index;
     uint256 low = index - _step;
-    uint256 mid = (low + high) / 2;
-    while (!elementExists(_tornadoTreesV1, _type, mid)) {
-      high = mid - 1;
-      mid = (low + high) / 2;
+    uint256 lastIndex = binarySearch(_tornadoTreesV1, _type, high, low);
+
+    return lastIndex + 1;
+  }
+
+  function binarySearch(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 _high,
+    uint256 _low
+  ) public view returns (uint256) {
+    require(_high >= _low, "Incorrect params");
+    uint256 mid = (_high + _low) / 2;
+    (bool isLast, bool exists) = isLastElement(_tornadoTreesV1, _type, mid);
+    if (isLast) {
+      return mid;
     }
 
-    high += 1;
-    low = mid + 1;
-    mid = (low + high) / 2;
-    while (elementExists(_tornadoTreesV1, _type, mid)) {
-      low = mid + 1;
-      mid = (low + high) / 2;
+    if (exists) {
+      return binarySearch(_tornadoTreesV1, _type, _high, mid + 1);
+    } else {
+      return binarySearch(_tornadoTreesV1, _type, mid - 1, _low);
     }
+  }
 
-    return high == low ? high : low;
+  function isLastElement(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 index
+  ) public view returns (bool success, bool exists) {
+    exists = elementExists(_tornadoTreesV1, _type, index);
+    success = exists && !elementExists(_tornadoTreesV1, _type, index + 1);
   }
 
   function elementExists(

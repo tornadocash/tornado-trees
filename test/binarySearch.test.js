@@ -75,4 +75,12 @@ describe('findArrayLength', () => {
     )
     expect(depositsLength).to.be.equal(deposits.length)
   })
+
+  it('should work for an array and big big step', async () => {
+    const deposits = Array.from(Array(30).keys())
+    publicArray = await PublicArray.deploy()
+    await publicArray.setDeposits(deposits)
+    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 1, 50)
+    expect(depositsLength).to.be.equal(deposits.length)
+  })
 })
