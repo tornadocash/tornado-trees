@@ -81,12 +81,11 @@ contract TornadoTrees is EnsResolve {
     treeUpdateVerifier = _treeUpdateVerifier;
     tornadoTreesV1 = _tornadoTreesV1;
 
-    depositRoot = _tornadoTreesV1.depositRoot();
-    withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
 
-    uint256 depositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
-    require(depositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
-    lastProcessedDepositLeaf = depositLeaf;
+    depositRoot = _tornadoTreesV1.depositRoot();
+    uint256 lastDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
+    require(lastDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedDepositLeaf = lastDepositLeaf;
     depositsLength = depositV1Length = findArrayLength(
       _tornadoTreesV1,
       "deposits(uint256)",
@@ -94,9 +93,10 @@ contract TornadoTrees is EnsResolve {
       _searchParams.depositsPerDay
     );
 
-    uint256 withdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
-    require(withdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
-    lastProcessedWithdrawalLeaf = withdrawalLeaf;
+    withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
+    uint256 lastWithdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
+    require(lastWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedWithdrawalLeaf = lastWithdrawalLeaf;
     withdrawalsLength = withdrawalsV1Length = findArrayLength(
       _tornadoTreesV1,
       "withdrawals(uint256)",
@@ -105,23 +105,25 @@ contract TornadoTrees is EnsResolve {
     );
   }
 
-  // todo make things internal. Think of dedundant calls
+  // todo make things internal
+  /// @dev There is no array length getter for deposit and withdrawal arrays
+  /// in previous contract, so we have to find them length manually
   function findArrayLength(
     ITornadoTreesV1 _tornadoTreesV1,
     string memory _type,
-    uint256 _from,
-    uint256 _step
+    uint256 _from, // most likely array length after the proposal has passed
+    uint256 _step  // optimal step size to find first match, approximately equals dispersion
   ) public view returns (uint256) {
-    require(_from != 0 && _step != 0, "_from and _step should be > 0");
-    // require(elementExists(_tornadoTreesV1, _type, _from), "Inccorrect _from param");
 
-    uint256 index = _from + _step;
-    while (elementExists(_tornadoTreesV1, _type, index)) {
-      index = index + _step;
-    }
+    // Find the segment with correct array length
+    bool direction = elementExists(_tornadoTreesV1, _type, _from);
+    do {
+      _from = direction ? _from + _step : _from - _step; // safe math?
+    } while (direction == elementExists(_tornadoTreesV1, _type, _from));
+    uint256 high = direction ? _from : _from + _step;
+    uint256 low = direction ? _from - _step : _from;
 
-    uint256 high = index;
-    uint256 low = index - _step;
+    // Perform a binary search on this segment
     uint256 lastIndex = binarySearch(_tornadoTreesV1, _type, high, low);
 
     return lastIndex + 1;
@@ -133,27 +135,16 @@ contract TornadoTrees is EnsResolve {
     uint256 _high,
     uint256 _low
   ) public view returns (uint256) {
-    require(_high >= _low, "Incorrect params");
     uint256 mid = (_high + _low) / 2;
-    (bool isLast, bool exists) = isLastElement(_tornadoTreesV1, _type, mid);
-    if (isLast) {
+    if (mid == _low) {
       return mid;
     }
 
-    if (exists) {
-      return binarySearch(_tornadoTreesV1, _type, _high, mid + 1);
+    if (elementExists(_tornadoTreesV1, _type, mid)) {
+      return binarySearch(_tornadoTreesV1, _type, _high, mid);
     } else {
-      return binarySearch(_tornadoTreesV1, _type, mid - 1, _low);
+      return binarySearch(_tornadoTreesV1, _type, mid, _low);
     }
-  }
-
-  function isLastElement(
-    ITornadoTreesV1 _tornadoTreesV1,
-    string memory _type,
-    uint256 index
-  ) public view returns (bool success, bool exists) {
-    exists = elementExists(_tornadoTreesV1, _type, index);
-    success = exists && !elementExists(_tornadoTreesV1, _type, index + 1);
   }
 
   function elementExists(
@@ -161,6 +152,7 @@ contract TornadoTrees is EnsResolve {
     string memory _type,
     uint256 index
   ) public view returns (bool success) {
+    // Try to get the element. If it succeeds array the length is higher, it it reverts the length is equal or lower
     (success, ) = address(_tornadoTreesV1).staticcall{ gas: 2500 }(abi.encodeWithSignature(_type, index));
   }
 
