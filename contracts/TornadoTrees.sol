@@ -4,7 +4,7 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/ITornadoTreesV1.sol";
-import "./interfaces/IVerifier.sol";
+import "./interfaces/IBatchTreeUpdateVerifier.sol";
 
 contract TornadoTrees {
   address public immutable governance;
@@ -13,7 +13,7 @@ contract TornadoTrees {
   bytes32 public withdrawalRoot;
   bytes32 public previousWithdrawalRoot;
   address public tornadoProxy;
-  IVerifier public treeUpdateVerifier;
+  IBatchTreeUpdateVerifier public treeUpdateVerifier;
   ITornadoTreesV1 public immutable tornadoTreesV1;
 
   // make sure CHUNK_TREE_HEIGHT has the same value in BatchTreeUpdate.circom
@@ -70,7 +70,7 @@ contract TornadoTrees {
     address _governance,
     address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IVerifier _treeUpdateVerifier,
+    IBatchTreeUpdateVerifier _treeUpdateVerifier,
     SearchParams memory _searchParams
   ) public {
     governance = _governance;
@@ -271,7 +271,7 @@ contract TornadoTrees {
     tornadoProxy = _tornadoProxy;
   }
 
-  function setVerifierContract(IVerifier _treeUpdateVerifier) external onlyGovernance {
+  function setVerifierContract(IBatchTreeUpdateVerifier _treeUpdateVerifier) external onlyGovernance {
     treeUpdateVerifier = _treeUpdateVerifier;
   }
 

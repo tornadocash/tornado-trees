@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "../TornadoTrees.sol";
 import "../interfaces/ITornadoTreesV1.sol";
-import "../interfaces/IVerifier.sol";
+import "../interfaces/IBatchTreeUpdateVerifier.sol";
 
 contract TornadoTreesMock is TornadoTrees {
   uint256 public currentBlock;
@@ -14,7 +14,7 @@ contract TornadoTreesMock is TornadoTrees {
     address _governance,
     address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IVerifier _treeUpdateVerifier,
+    IBatchTreeUpdateVerifier _treeUpdateVerifier,
     SearchParams memory _searchParams
   ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier, _searchParams) {}
 
