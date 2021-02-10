@@ -18,10 +18,6 @@ contract TornadoTreesMock is TornadoTrees {
     SearchParams memory _searchParams
   ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier, _searchParams) {}
 
-  function resolve(bytes32 _addr) public view override returns (address) {
-    return address(uint160(uint256(_addr) >> (12 * 8)));
-  }
-
   function setBlockNumber(uint256 _blockNumber) public {
     currentBlock = _blockNumber;
   }
