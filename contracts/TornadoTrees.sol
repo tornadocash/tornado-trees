@@ -116,7 +116,7 @@ contract TornadoTrees is EnsResolve {
     // Find the segment with correct array length
     bool direction = elementExists(_tornadoTreesV1, _type, _from);
     do {
-      _from = direction ? _from + _step : _from - _step; // safe math?
+      _from = direction ? _from + _step : _from - _step;
     } while (direction == elementExists(_tornadoTreesV1, _type, _from));
     uint256 high = direction ? _from : _from + _step;
     uint256 low = direction ? _from - _step : _from;
@@ -129,7 +129,7 @@ contract TornadoTrees is EnsResolve {
       } else {
         high = mid;
       }
-      mid = (high + low) / 2;
+      mid = (low + high) / 2;
     }
     return mid + 1;
   }
@@ -139,7 +139,7 @@ contract TornadoTrees is EnsResolve {
     string memory _type,
     uint256 index
   ) public view returns (bool success) {
-    // Try to get the element. If it succeeds array the length is higher, it it reverts the length is equal or lower
+    // Try to get the element. If it succeeds the array length is higher, it it reverts the length is equal or lower
     (success, ) = address(_tornadoTreesV1).staticcall{ gas: 2500 }(abi.encodeWithSignature(_type, index));
   }
 
