@@ -37,6 +37,13 @@ describe('findArrayLength', () => {
     expect(depositsLength).to.be.equal(depositsEven.length)
   })
 
+  it('should work for empty array', async () => {
+    publicArray = await PublicArray.deploy()
+    // will throw out of gas if you pass non zero params
+    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 0, 0)
+    expect(depositsLength).to.be.equal(0)
+  })
+
   it('should work for odd array', async () => {
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(depositsOdd)

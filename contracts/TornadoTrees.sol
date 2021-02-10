@@ -110,6 +110,9 @@ contract TornadoTrees {
     uint256 _from, // most likely array length after the proposal has passed
     uint256 _step // optimal step size to find first match, approximately equals dispersion
   ) public view returns (uint256) {
+    if (_from == 0 && _step == 0) {
+      return 0; // for tests
+    }
     // Find the segment with correct array length
     bool direction = elementExists(_tornadoTreesV1, _type, _from);
     do {

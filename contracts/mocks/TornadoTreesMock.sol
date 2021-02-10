@@ -40,6 +40,11 @@ contract TornadoTreesMock is TornadoTrees {
     registerWithdrawal(_instance, _nullifier);
   }
 
+  function updateRoots(bytes32 _depositRoot, bytes32 _withdrawalRoot) public {
+    depositRoot = _depositRoot;
+    withdrawalRoot = _withdrawalRoot;
+  }
+
   function updateDepositTreeMock(
     bytes32 _oldRoot,
     bytes32 _newRoot,
