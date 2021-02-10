@@ -83,4 +83,28 @@ describe('findArrayLength', () => {
     const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 1, 50)
     expect(depositsLength).to.be.equal(deposits.length)
   })
+
+  it('should pass stress test', async () => {
+    const iterations = 30
+    const days = 10
+    const depositsPerDay = 10
+    const dispersion = 5
+
+    for (let i = 0; i < iterations; i++) {
+      let len = 0
+      for (let j = 0; j < days; j++) {
+        len += depositsPerDay + Math.round((Math.random() - 0.5) * 2 * dispersion)
+      }
+      const deposits = Array.from(Array(len).keys())
+      publicArray = await PublicArray.deploy()
+      await publicArray.setDeposits(deposits)
+      const depositsLength = await tornadoTrees.findArrayLength(
+        publicArray.address,
+        'deposits(uint256)',
+        days * depositsPerDay,
+        dispersion * 2,
+      )
+      expect(depositsLength).to.be.equal(deposits.length)
+    }
+  })
 })
