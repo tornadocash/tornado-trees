@@ -3,13 +3,10 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "torn-token/contracts/ENS.sol";
 import "./interfaces/ITornadoTreesV1.sol";
 import "./interfaces/IVerifier.sol";
 
-import "hardhat/console.sol";
-
-contract TornadoTrees is EnsResolve {
+contract TornadoTrees {
   address public immutable governance;
   bytes32 public depositRoot;
   bytes32 public previousDepositRoot;
