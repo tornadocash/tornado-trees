@@ -81,7 +81,6 @@ contract TornadoTrees is EnsResolve {
     treeUpdateVerifier = _treeUpdateVerifier;
     tornadoTreesV1 = _tornadoTreesV1;
 
-
     depositRoot = _tornadoTreesV1.depositRoot();
     uint256 lastDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(lastDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
@@ -112,9 +111,8 @@ contract TornadoTrees is EnsResolve {
     ITornadoTreesV1 _tornadoTreesV1,
     string memory _type,
     uint256 _from, // most likely array length after the proposal has passed
-    uint256 _step  // optimal step size to find first match, approximately equals dispersion
+    uint256 _step // optimal step size to find first match, approximately equals dispersion
   ) public view returns (uint256) {
-
     // Find the segment with correct array length
     bool direction = elementExists(_tornadoTreesV1, _type, _from);
     do {
