@@ -15,3 +15,11 @@ $ yarn
 $ yarn circuit
 $ yarn test
 ```
+
+## Mainnet testing
+
+```bash
+$ yarn circuit
+$ npx hardhat node --fork <https://eth-mainnet.alchemyapi.io/v2/API_KEY> --fork-block-number 11827889
+$ npx hardhat test
+```
