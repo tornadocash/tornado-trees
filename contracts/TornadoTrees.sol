@@ -122,29 +122,18 @@ contract TornadoTrees is EnsResolve {
     } while (direction == elementExists(_tornadoTreesV1, _type, _from));
     uint256 high = direction ? _from : _from + _step;
     uint256 low = direction ? _from - _step : _from;
+    uint256 mid = (high + low) / 2;
 
-    // Perform a binary search on this segment
-    uint256 lastIndex = binarySearch(_tornadoTreesV1, _type, high, low);
-
-    return lastIndex + 1;
-  }
-
-  function binarySearch(
-    ITornadoTreesV1 _tornadoTreesV1,
-    string memory _type,
-    uint256 _high,
-    uint256 _low
-  ) public view returns (uint256) {
-    uint256 mid = (_high + _low) / 2;
-    if (mid == _low) {
-      return mid;
+    // Perform a binary search in this segment
+    while (low < mid) {
+      if (elementExists(_tornadoTreesV1, _type, mid)) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+      mid = (high + low) / 2;
     }
-
-    if (elementExists(_tornadoTreesV1, _type, mid)) {
-      return binarySearch(_tornadoTreesV1, _type, _high, mid);
-    } else {
-      return binarySearch(_tornadoTreesV1, _type, mid, _low);
-    }
+    return mid + 1;
   }
 
   function elementExists(
