@@ -60,10 +60,10 @@ contract TornadoTrees {
   }
 
   struct SearchParams {
-    uint256 unprocessedDeposits;
-    uint256 unprocessedWithdrawals;
-    uint256 depositsPerDay;
-    uint256 withdrawalsPerDay;
+    uint256 depositsFrom;
+    uint256 depositsStep;
+    uint256 withdrawalsFrom;
+    uint256 withdrawalsStep;
   }
 
   constructor(
@@ -85,8 +85,8 @@ contract TornadoTrees {
     depositsLength = depositV1Length = findArrayLength(
       _tornadoTreesV1,
       "deposits(uint256)",
-      _searchParams.unprocessedDeposits,
-      _searchParams.depositsPerDay
+      _searchParams.depositsFrom,
+      _searchParams.depositsStep
     );
 
     withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
@@ -96,8 +96,8 @@ contract TornadoTrees {
     withdrawalsLength = withdrawalsV1Length = findArrayLength(
       _tornadoTreesV1,
       "withdrawals(uint256)",
-      _searchParams.unprocessedWithdrawals,
-      _searchParams.withdrawalsPerDay
+      _searchParams.withdrawalsFrom,
+      _searchParams.withdrawalsStep
     );
   }
 
