@@ -16,7 +16,6 @@ COPY circuits circuits
 COPY scripts scripts
 # ENV NODE_OPTIONS='--trace-gc --trace-gc-ignore-scavenger --max-old-space-size=2048000 --initial-old-space-size=2048000 --no-global-gc-scheduling --no-incremental-marking --max-semi-space-size=1024 --initial-heap-size=2048000'
 ENV NODE_OPTIONS='--max-old-space-size=2048000'
-RUN mkdir -p build/circuits
 RUN yarn circuit:batchTreeUpdateLarge
 RUN yarn circuit:batchTreeUpdateWitness
 COPY . .
