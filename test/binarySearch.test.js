@@ -24,10 +24,10 @@ describe('findArrayLength', () => {
       publicArray.address,
       publicArray.address,
       {
-        unprocessedDeposits: 3,
-        unprocessedWithdrawals: 3,
-        depositsPerDay: 2,
-        withdrawalsPerDay: 2,
+        depositsFrom: 3,
+        depositsStep: 3,
+        withdrawalsFrom: 2,
+        withdrawalsStep: 2,
       },
     )
   })

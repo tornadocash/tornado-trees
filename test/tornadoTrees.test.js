@@ -49,7 +49,6 @@ describe('TornadoTrees', function () {
 
     const TornadoTreesV1 = await ethers.getContractFactory('TornadoTreesV1Mock')
     tornadoTreesV1 = await TornadoTreesV1.deploy(0, 0, tree.root(), tree.root())
-
     notes = []
     for (let i = 0; i < 2 ** CHUNK_TREE_HEIGHT; i++) {
       notes[i] = {
@@ -78,10 +77,10 @@ describe('TornadoTrees', function () {
       tornadoTreesV1.address,
       verifier.address,
       {
-        unprocessedDeposits: 1,
-        unprocessedWithdrawals: 1,
-        depositsPerDay: 2,
-        withdrawalsPerDay: 2,
+        depositsFrom: 1,
+        depositsStep: 1,
+        withdrawalsFrom: 2,
+        withdrawalsStep: 2,
       },
     )
     depositDataEventFilter = tornadoTrees.filters.DepositData()
@@ -166,10 +165,10 @@ describe('TornadoTrees', function () {
         tornadoTreesV1.address,
         verifier.address,
         {
-          unprocessedDeposits: 1,
-          unprocessedWithdrawals: 1,
-          depositsPerDay: 2,
-          withdrawalsPerDay: 2,
+          depositsFrom: 1,
+          depositsStep: 1,
+          withdrawalsFrom: 2,
+          withdrawalsStep: 2,
         },
       )
 
