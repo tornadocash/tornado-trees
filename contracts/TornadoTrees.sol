@@ -26,7 +26,7 @@ contract TornadoTrees {
   mapping(uint256 => bytes32) public deposits;
   uint256 public depositsLength;
   uint256 public lastProcessedDepositLeaf;
-  uint256 public immutable depositV1Length;
+  uint256 public immutable depositsV1Length;
 
   mapping(uint256 => bytes32) public withdrawals;
   uint256 public withdrawalsLength;
@@ -82,7 +82,7 @@ contract TornadoTrees {
     uint256 lastDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
     require(lastDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedDepositLeaf = lastDepositLeaf;
-    depositsLength = depositV1Length = findArrayLength(
+    depositsLength = depositsV1Length = findArrayLength(
       _tornadoTreesV1,
       "deposits(uint256)",
       _searchParams.depositsFrom,
@@ -179,14 +179,14 @@ contract TornadoTrees {
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
       (bytes32 hash, address instance, uint32 blockNumber) = (_events[i].hash, _events[i].instance, _events[i].block);
       bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
-      bytes32 deposit = offset + i >= depositV1Length ? deposits[offset + i] : tornadoTreesV1.deposits(offset + i);
+      bytes32 deposit = offset + i >= depositsV1Length ? deposits[offset + i] : tornadoTreesV1.deposits(offset + i);
       require(leafHash == deposit, "Incorrect deposit");
       assembly {
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
       }
-      if (offset + i >= depositV1Length) {
+      if (offset + i >= depositsV1Length) {
         delete deposits[offset + i];
       } else {
         emit DepositData(instance, hash, blockNumber, offset + i);
