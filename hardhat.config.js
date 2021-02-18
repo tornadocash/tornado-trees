@@ -31,9 +31,6 @@ const config = {
     hardhat: {
       blockGasLimit: 9500000,
     },
-    node: {
-      url: 'http://localhost:8545',
-    },
   },
   mocha: {
     timeout: 600000,
