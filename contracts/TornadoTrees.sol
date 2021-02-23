@@ -42,13 +42,6 @@ contract TornadoTrees {
     uint32 block;
   }
 
-  struct Batch {
-    bytes32 oldRoot;
-    bytes32 newRoot;
-    uint8 pathIndices;
-    TreeLeaf[CHUNK_SIZE] events;
-  }
-
   modifier onlyTornadoProxy {
     require(msg.sender == tornadoProxy, "Not authorized");
     _;
