@@ -14,21 +14,26 @@ template TreeUpdateArgsHasher(nLeaves) {
     var bitsPerLeaf = 160 + 256 + 32;
     component hasher = Sha256(header + nLeaves * bitsPerLeaf);
 
-    component bitsOldRoot = Num2Bits(256);
-    component bitsNewRoot = Num2Bits(256);
+    component bitsOldRoot = Num2Bits_strict();
+    component bitsNewRoot = Num2Bits_strict();
     component bitsPathIndices = Num2Bits(32);
     component bitsInstance[nLeaves];
     component bitsHash[nLeaves];
     component bitsBlock[nLeaves];
-    
+
     bitsOldRoot.in <== oldRoot;
     bitsNewRoot.in <== newRoot;
     bitsPathIndices.in <== pathIndices;
-    for(var i = 0; i < 256; i++) {
-        hasher.in[i] <== bitsOldRoot.out[255 - i];
+
+    hasher.in[0] <== 0;
+    hasher.in[1] <== 0;
+    for(var i = 0; i < 254; i++) {
+        hasher.in[i + 2] <== bitsOldRoot.out[253 - i];
     }
-    for(var i = 0; i < 256; i++) {
-        hasher.in[i + 256] <== bitsNewRoot.out[255 - i];
+    hasher.in[256] <== 0;
+    hasher.in[257] <== 0;
+    for(var i = 0; i < 254; i++) {
+        hasher.in[i + 258] <== bitsNewRoot.out[253 - i];
     }
     for(var i = 0; i < 32; i++) {
         hasher.in[i + 512] <== bitsPathIndices.out[31 - i];
