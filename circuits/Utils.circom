@@ -14,6 +14,7 @@ template TreeUpdateArgsHasher(nLeaves) {
     var bitsPerLeaf = 160 + 256 + 32;
     component hasher = Sha256(header + nLeaves * bitsPerLeaf);
 
+    // the range check on old root is optional, it's enforced by smart contract anyway
     component bitsOldRoot = Num2Bits_strict();
     component bitsNewRoot = Num2Bits_strict();
     component bitsPathIndices = Num2Bits(32);
@@ -39,14 +40,17 @@ template TreeUpdateArgsHasher(nLeaves) {
         hasher.in[i + 512] <== bitsPathIndices.out[31 - i];
     }
     for(var leaf = 0; leaf < nLeaves; leaf++) {
-        bitsHash[leaf] = Num2Bits(256);
+        // the range check on hash is optional, it's enforced by the smart contract anyway
+        bitsHash[leaf] = Num2Bits_strict();
         bitsInstance[leaf] = Num2Bits(160);
         bitsBlock[leaf] = Num2Bits(32);
         bitsHash[leaf].in <== hashes[leaf];
         bitsInstance[leaf].in <== instances[leaf];
         bitsBlock[leaf].in <== blocks[leaf];
-        for(var i = 0; i < 256; i++) {
-            hasher.in[header + leaf * bitsPerLeaf + i] <== bitsHash[leaf].out[255 - i];
+        hasher.in[header + leaf * bitsPerLeaf + 0] <== 0;
+        hasher.in[header + leaf * bitsPerLeaf + 1] <== 0;
+        for(var i = 0; i < 254; i++) {
+            hasher.in[header + leaf * bitsPerLeaf + i + 2] <== bitsHash[leaf].out[253 - i];
         }
         for(var i = 0; i < 160; i++) {
             hasher.in[header + leaf * bitsPerLeaf + i + 256] <== bitsInstance[leaf].out[159 - i];
