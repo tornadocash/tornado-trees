@@ -55,9 +55,9 @@ function prove(input, keyBasePath) {
 }
 
 function batchTreeUpdate(tree, events) {
-  const batchHeight = 2 //await this.tornadoTreesContract.CHUNK_TREE_HEIGHT()
-  if (events.length !== 1 << batchHeight) {
-    throw new Error('events length does not match the batch size')
+  const batchHeight = Math.log2(events.length)
+  if (!Number.isInteger(batchHeight)) {
+    throw new Error('events length has to be power of 2')
   }
 
   const oldRoot = tree.root().toString()

@@ -140,14 +140,15 @@ describe('TornadoTrees', function () {
         instance: toFixedHex(e.args.instance, 20),
         block: toFixedHex(e.args.block, 4),
       }))
-      ;({ input, args } = controller.batchTreeUpdate(tree, registeredEvents.slice(0, 4)))
+      ;({ input, args } = controller.batchTreeUpdate(tree, registeredEvents.slice(0, notes.length)))
       proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
       await tornadoTrees.updateDepositTree(proof, ...args)
       updatedRoot = await tornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
     })
     it('should work for batch+N filled v1 tree', async () => {
-      for (let i = 4; i < 6; i++) {
+      const batchSize = 2 ** CHUNK_TREE_HEIGHT
+      for (let i = batchSize; i < batchSize + 2; i++) {
         notes.push({
           instance: instances[i % instances.length],
           depositBlock: blocks[i % blocks.length],
@@ -172,27 +173,32 @@ describe('TornadoTrees', function () {
         },
       )
 
+      // load first batchSize deposits
       let { input, args } = controller.batchTreeUpdate(tree, depositEvents)
       let proof = await controller.prove(input, './artifacts/circuits/BatchTreeUpdate')
       await newTornadoTrees.updateDepositTree(proof, ...args)
       let updatedRoot = await newTornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
 
-      // register 6 new deposits for the new trees
+      // register 2 * `notes.length` new deposits on the new trees
+      for (let i = 0; i < notes.length; i++) {
+        await register(notes[i], newTornadoTrees, tornadoProxy)
+      }
       for (let i = 0; i < notes.length; i++) {
         await register(notes[i], newTornadoTrees, tornadoProxy)
       }
 
-      // get 2 events from v1 tress
-      let events = notes.slice(4).map((note) => ({
+      // get 2 extra events from v1 tress
+      let events = notes.slice(batchSize).map((note) => ({
         hash: toFixedHex(note.commitment),
         instance: toFixedHex(note.instance, 20),
         block: toFixedHex(note.depositBlock, 4),
       }))
 
-      const registeredEvents = await newTornadoTrees.queryFilter(depositDataEventFilter)
+      let registeredEvents = await newTornadoTrees.queryFilter(depositDataEventFilter)
+      registeredEvents = registeredEvents.slice(batchSize) // cut processed deposits from v1
       events = events.concat(
-        registeredEvents.slice(0, 2).map((e) => ({
+        registeredEvents.slice(0, batchSize - 2).map((e) => ({
           hash: toFixedHex(e.args.hash),
           instance: toFixedHex(e.args.instance, 20),
           block: toFixedHex(e.args.block, 4),
@@ -205,7 +211,7 @@ describe('TornadoTrees', function () {
       updatedRoot = await newTornadoTrees.depositRoot()
       expect(updatedRoot).to.be.equal(tree.root())
 
-      events = registeredEvents.slice(6).map((e) => ({
+      events = registeredEvents.slice(batchSize - 2, 2 * batchSize - 2).map((e) => ({
         hash: toFixedHex(e.args.hash),
         instance: toFixedHex(e.args.instance, 20),
         block: toFixedHex(e.args.block, 4),
