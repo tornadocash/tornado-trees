@@ -23,3 +23,15 @@ $ yarn circuit
 $ npx hardhat node --fork <https://eth-mainnet.alchemyapi.io/v2/API_KEY> --fork-block-number 11827889
 $ npx hardhat test
 ```
+
+## Checklist for batch size changing
+
+find and replace the `CHUNK_TREE_HEIGHT = ` in following files
+
+1. `circuits/BatchTreeUpdate.circom`
+2. `contracts/TornadoTrees.sol`
+3. `tornadoTrees.test.js`
+
+## build large circuits
+
+1. docker build . -t tornadocash/tornado-trees
