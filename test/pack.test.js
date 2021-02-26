@@ -13,7 +13,7 @@ const hashes = [
   '0x57f7b90a3cb4ea6860e6dd5fa44ac4f53ebe6ae3948af577a01ef51738313246',
 ]
 
-const CHUNK_TREE_HEIGHT = 7
+const CHUNK_TREE_HEIGHT = 8
 describe.skip('Pack', () => {
   it('should work', async () => {
     const Pack = await ethers.getContractFactory('Pack')

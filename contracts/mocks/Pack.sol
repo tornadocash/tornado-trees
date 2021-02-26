@@ -3,7 +3,7 @@
 pragma solidity ^0.6.0;
 
 contract Pack {
-  uint256 public constant CHUNK_TREE_HEIGHT = 7;
+  uint256 public constant CHUNK_TREE_HEIGHT = 8;
   uint256 public constant CHUNK_SIZE = 2**CHUNK_TREE_HEIGHT;
   uint256 public constant ITEM_SIZE = 32 + 20 + 4;
   uint256 public constant BYTES_SIZE = CHUNK_SIZE * ITEM_SIZE;

@@ -15,8 +15,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-      - run: yarn install
       - run: cargo install zkutil
+      - run: yarn install
+      - run: yarn changeTreeHeight 2
       - run: yarn circuit
       - run: yarn test
       - run: yarn lint

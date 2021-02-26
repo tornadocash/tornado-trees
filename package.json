@@ -16,6 +16,7 @@
     "prettier:check": "prettier --check . --config .prettierrc",
     "prettier:fix": "prettier --write . --config .prettierrc",
     "lint": "yarn eslint && yarn prettier:check",
+    "changeTreeHeight": "scripts/changeTreeHeight.sh",
     "circuit:batchTreeUpdate": "scripts/buildCircuit.sh BatchTreeUpdate",
     "circuit:batchTreeUpdateLarge": "scripts/buildCircuit.sh BatchTreeUpdate large",
     "circuit:batchTreeUpdateWitness": "scripts/buildWitness.sh BatchTreeUpdate",
