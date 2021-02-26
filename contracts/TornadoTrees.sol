@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 
 import "./interfaces/ITornadoTreesV1.sol";
 import "./interfaces/IBatchTreeUpdateVerifier.sol";
+import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 
-contract TornadoTrees {
+contract TornadoTrees is Initializable {
   address public immutable governance;
   bytes32 public depositRoot;
   bytes32 public previousDepositRoot;
@@ -61,37 +62,42 @@ contract TornadoTrees {
 
   constructor(
     address _governance,
-    address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IBatchTreeUpdateVerifier _treeUpdateVerifier,
     SearchParams memory _searchParams
   ) public {
     governance = _governance;
-    tornadoProxy = _tornadoProxy;
-    treeUpdateVerifier = _treeUpdateVerifier;
     tornadoTreesV1 = _tornadoTreesV1;
 
-    depositRoot = _tornadoTreesV1.depositRoot();
-    uint256 lastDepositLeaf = _tornadoTreesV1.lastProcessedDepositLeaf();
-    require(lastDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
-    lastProcessedDepositLeaf = lastDepositLeaf;
-    depositsLength = depositsV1Length = findArrayLength(
+    depositsV1Length = findArrayLength(
       _tornadoTreesV1,
       "deposits(uint256)",
       _searchParams.depositsFrom,
       _searchParams.depositsStep
     );
 
-    withdrawalRoot = _tornadoTreesV1.withdrawalRoot();
-    uint256 lastWithdrawalLeaf = _tornadoTreesV1.lastProcessedWithdrawalLeaf();
-    require(lastWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
-    lastProcessedWithdrawalLeaf = lastWithdrawalLeaf;
-    withdrawalsLength = withdrawalsV1Length = findArrayLength(
+    withdrawalsV1Length = findArrayLength(
       _tornadoTreesV1,
       "withdrawals(uint256)",
       _searchParams.withdrawalsFrom,
       _searchParams.withdrawalsStep
     );
+  }
+
+  function initialize(address _tornadoProxy, IBatchTreeUpdateVerifier _treeUpdateVerifier) public initializer onlyGovernance {
+    tornadoProxy = _tornadoProxy;
+    treeUpdateVerifier = _treeUpdateVerifier;
+
+    depositRoot = tornadoTreesV1.depositRoot();
+    uint256 lastDepositLeaf = tornadoTreesV1.lastProcessedDepositLeaf();
+    require(lastDepositLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedDepositLeaf = lastDepositLeaf;
+    depositsLength = depositsV1Length;
+
+    withdrawalRoot = tornadoTreesV1.withdrawalRoot();
+    uint256 lastWithdrawalLeaf = tornadoTreesV1.lastProcessedWithdrawalLeaf();
+    require(lastWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
+    lastProcessedWithdrawalLeaf = lastWithdrawalLeaf;
+    withdrawalsLength = withdrawalsV1Length;
   }
 
   // todo make things internal

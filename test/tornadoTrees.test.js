@@ -71,18 +71,13 @@ describe('TornadoTrees', function () {
       }
     }
     const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
-    tornadoTrees = await TornadoTrees.deploy(
-      operator.address,
-      tornadoProxy.address,
-      tornadoTreesV1.address,
-      verifier.address,
-      {
-        depositsFrom: 1,
-        depositsStep: 1,
-        withdrawalsFrom: 2,
-        withdrawalsStep: 2,
-      },
-    )
+    tornadoTrees = await TornadoTrees.deploy(operator.address, tornadoTreesV1.address, {
+      depositsFrom: 1,
+      depositsStep: 1,
+      withdrawalsFrom: 2,
+      withdrawalsStep: 2,
+    })
+    await tornadoTrees.initialize(tornadoProxy.address, verifier.address)
     depositDataEventFilter = tornadoTrees.filters.DepositData()
   })
 
@@ -160,18 +155,13 @@ describe('TornadoTrees', function () {
       }
 
       const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
-      const newTornadoTrees = await TornadoTrees.deploy(
-        operator.address,
-        tornadoProxy.address,
-        tornadoTreesV1.address,
-        verifier.address,
-        {
-          depositsFrom: 1,
-          depositsStep: 1,
-          withdrawalsFrom: 2,
-          withdrawalsStep: 2,
-        },
-      )
+      const newTornadoTrees = await TornadoTrees.deploy(operator.address, tornadoTreesV1.address, {
+        depositsFrom: 1,
+        depositsStep: 1,
+        withdrawalsFrom: 2,
+        withdrawalsStep: 2,
+      })
+      await newTornadoTrees.initialize(tornadoProxy.address, verifier.address)
 
       // load first batchSize deposits
       let { input, args } = controller.batchTreeUpdate(tree, depositEvents)

@@ -12,11 +12,9 @@ contract TornadoTreesMock is TornadoTrees {
 
   constructor(
     address _governance,
-    address _tornadoProxy,
     ITornadoTreesV1 _tornadoTreesV1,
-    IBatchTreeUpdateVerifier _treeUpdateVerifier,
     SearchParams memory _searchParams
-  ) public TornadoTrees(_governance, _tornadoProxy, _tornadoTreesV1, _treeUpdateVerifier, _searchParams) {}
+  ) public TornadoTrees(_governance, _tornadoTreesV1, _searchParams) {}
 
   function setBlockNumber(uint256 _blockNumber) public {
     currentBlock = _blockNumber;

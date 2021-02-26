@@ -18,18 +18,13 @@ describe('findArrayLength', () => {
     await publicArray.setWithdrawals(depositsEven)
 
     const TornadoTrees = await ethers.getContractFactory('TornadoTreesMock')
-    tornadoTrees = await TornadoTrees.deploy(
-      operator.address,
-      tornadoProxy.address,
-      publicArray.address,
-      publicArray.address,
-      {
-        depositsFrom: 3,
-        depositsStep: 3,
-        withdrawalsFrom: 2,
-        withdrawalsStep: 2,
-      },
-    )
+    tornadoTrees = await TornadoTrees.deploy(operator.address, publicArray.address, {
+      depositsFrom: 3,
+      depositsStep: 3,
+      withdrawalsFrom: 2,
+      withdrawalsStep: 2,
+    })
+    await tornadoTrees.initialize(tornadoProxy.address, publicArray.address)
   })
 
   it('should work for even array', async () => {
