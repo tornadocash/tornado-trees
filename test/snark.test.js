@@ -4,7 +4,7 @@ const { poseidonHash2, randomBN } = require('../src/utils')
 const { batchTreeUpdate, prove } = require('../src/index')
 
 const levels = 20
-const CHUNK_TREE_HEIGHT = 2
+const CHUNK_TREE_HEIGHT = 8
 describe('Snark', () => {
   it('should work', async () => {
     const tree = new MerkleTree(levels, [], { hashFunction: poseidonHash2 })

@@ -17,7 +17,7 @@ contract TornadoTrees {
   ITornadoTreesV1 public immutable tornadoTreesV1;
 
   // make sure CHUNK_TREE_HEIGHT has the same value in BatchTreeUpdate.circom
-  uint256 public constant CHUNK_TREE_HEIGHT = 2;
+  uint256 public constant CHUNK_TREE_HEIGHT = 8;
   uint256 public constant CHUNK_SIZE = 2**CHUNK_TREE_HEIGHT;
   uint256 public constant ITEM_SIZE = 32 + 20 + 4;
   uint256 public constant BYTES_SIZE = 32 + 32 + 4 + CHUNK_SIZE * ITEM_SIZE;

@@ -17,7 +17,7 @@ async function register(note, tornadoTrees, from) {
 }
 
 const levels = 20
-const CHUNK_TREE_HEIGHT = 2
+const CHUNK_TREE_HEIGHT = 8
 
 const instances = [
   '0x1111000000000000000000000000000000001111',

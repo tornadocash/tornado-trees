@@ -15,7 +15,7 @@ const instances = [
 ]
 
 const blocks = ['0xaaaaaaaa', '0xbbbbbbbb', '0xcccccccc', '0xdddddddd']
-const CHUNK_TREE_HEIGHT = 2
+const CHUNK_TREE_HEIGHT = 8
 const levels = 20
 
 const nonRandomBN = (nonce = 0) =>
