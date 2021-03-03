@@ -167,7 +167,7 @@ contract TornadoTrees is Initializable {
     uint256 offset = lastProcessedDepositLeaf;
     require(_newRoot != previousDepositRoot, "Outdated deposit root");
     require(_currentRoot == depositRoot, "Proposed deposit root is invalid");
-    require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect insert index");
+    require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect deposit insert index");
 
     bytes memory data = new bytes(BYTES_SIZE);
     assembly {
@@ -206,14 +206,13 @@ contract TornadoTrees is Initializable {
     bytes32 _argsHash,
     bytes32 _currentRoot,
     bytes32 _newRoot,
-    uint256 _pathIndices,
+    uint32 _pathIndices,
     TreeLeaf[CHUNK_SIZE] calldata _events
   ) public {
     uint256 offset = lastProcessedWithdrawalLeaf;
     require(_newRoot != previousWithdrawalRoot, "Outdated withdrawal root");
     require(_currentRoot == withdrawalRoot, "Proposed withdrawal root is invalid");
-    require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect insert index");
-    require(uint256(_newRoot) < SNARK_FIELD, "Proposed root is out of range");
+    require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect withdrawal insert index");
 
     bytes memory data = new bytes(BYTES_SIZE);
     assembly {
@@ -226,7 +225,6 @@ contract TornadoTrees is Initializable {
       bytes32 leafHash = keccak256(abi.encode(instance, hash, blockNumber));
       bytes32 withdrawal = offset + i >= withdrawalsV1Length ? withdrawals[offset + i] : tornadoTreesV1.withdrawals(offset + i);
       require(leafHash == withdrawal, "Incorrect withdrawal");
-      require(uint256(hash) < SNARK_FIELD, "Hash out of range");
       assembly {
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
         mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
