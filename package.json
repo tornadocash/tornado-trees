@@ -1,6 +1,6 @@
 {
   "name": "tornado-trees",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "src/index.js",
   "repository": "https://github.com/tornadocash/tornado-trees.git",
   "author": "Tornadocash team <hello@tornado.cash>",
@@ -46,6 +46,7 @@
     "circomlib": "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "dotenv": "^8.2.0",
     "ffiasm": "^0.1.1",
+    "ffjavascript": "^0.2.35",
     "fixed-merkle-tree": "^0.5.0",
     "jssha": "^3.2.0",
     "snarkjs": "^0.3.57",

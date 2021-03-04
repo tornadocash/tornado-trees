@@ -1,5 +1,7 @@
 const ethers = require('ethers')
 const BigNumber = ethers.BigNumber
+const { wtns } = require('snarkjs')
+const { utils } = require('ffjavascript')
 
 const { bitsToNumber, toBuffer, toFixedHex, poseidonHash } = require('./utils')
 
@@ -32,16 +34,17 @@ function hashInputs(input) {
 function prove(input, keyBasePath) {
   return tmp.dir().then(async (dir) => {
     dir = dir.path
-    fs.writeFileSync(`${dir}/input.json`, JSON.stringify(input, null, 2))
     let out
 
     try {
       if (fs.existsSync(`${keyBasePath}`)) {
         // native witness calc
+        fs.writeFileSync(`${dir}/input.json`, JSON.stringify(input, null, 2))
         out = await exec(`${keyBasePath} ${dir}/input.json ${dir}/witness.json`)
       } else {
-        out = await exec(`npx snarkjs wd ${keyBasePath}.wasm ${dir}/input.json ${dir}/witness.wtns`)
-        out = await exec(`npx snarkjs wej ${dir}/witness.wtns ${dir}/witness.json`)
+        await wtns.calculate(utils.unstringifyBigInts(input), `${keyBasePath}.wasm`, `${dir}/witness.wtns`)
+        const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir}/witness.wtns`))
+        fs.writeFileSync(`${dir}/witness.json`, JSON.stringify(witness, null, 2))
       }
       out = await exec(
         `zkutil prove -c ${keyBasePath}.r1cs -p ${keyBasePath}.params -w ${dir}/witness.json -r ${dir}/proof.json -o ${dir}/public.json`,

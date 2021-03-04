@@ -24,11 +24,11 @@ contract Pack {
     uint256 gasBefore = gasleft();
     bytes memory data = new bytes(BYTES_SIZE);
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
-      (bytes32 hash, address instance, uint32 block) = (hashes[i], instances[i], blocks[i]);
+      (bytes32 _hash, address _instance, uint32 _block) = (hashes[i], instances[i], blocks[i]);
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x38), block)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x34), instance)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x20), hash)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x38), _block)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x34), _instance)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x20), _hash)
       }
     }
     uint256 gasHash = gasleft();
@@ -52,23 +52,23 @@ contract Pack {
     public
     view
     returns (
-      uint256 gas1,
-      uint256 gas2,
-      bytes32 hash
+      uint256,
+      uint256,
+      bytes32
     )
   {
     uint256 gasBefore = gasleft();
     bytes memory data = new bytes(BYTES_SIZE);
     for (uint256 i = 0; i < CHUNK_SIZE; i++) {
-      (bytes32 hash, address instance, uint32 block) = (hashes[i], instances[i], blocks[i]);
+      (bytes32 _hash, address _instance, uint32 _block) = (hashes[i], instances[i], blocks[i]);
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x38), block)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x34), instance)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x20), hash)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x38), _block)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x34), _instance)
+        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x20), _hash)
       }
     }
     uint256 gasHash = gasleft();
-    bytes32 hash = sha256(data);
-    return (gasleft() - gasHash, gasHash - gasBefore, hash);
+    bytes32 hash1 = sha256(data);
+    return (gasleft() - gasHash, gasHash - gasBefore, hash1);
   }
 }
