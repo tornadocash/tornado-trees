@@ -1,13 +1,14 @@
 {
   "name": "tornado-trees",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": "src/index.js",
   "repository": "https://github.com/tornadocash/tornado-trees.git",
   "author": "Tornadocash team <hello@tornado.cash>",
   "license": "MIT",
   "files": [
     "src/*",
-    "contracts/*"
+    "contracts/*",
+    "scripts/*"
   ],
   "scripts": {
     "compile": "npx hardhat compile",
