@@ -7,6 +7,7 @@ import "./interfaces/ITornadoTreesV1.sol";
 import "./interfaces/IBatchTreeUpdateVerifier.sol";
 import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 
+/// @dev This contract holds a merkle tree of all tornado cash deposit and withdrawal events
 contract TornadoTrees is Initializable {
   address public immutable governance;
   bytes32 public depositRoot;
@@ -209,7 +210,7 @@ contract TornadoTrees is Initializable {
   }
 
   /// @dev There is no array length getter for deposit and withdrawal arrays
-  /// in previous contract, so we have to find them length manually.
+  /// in the previous contract, so we have to find them length manually.
   /// Used only during deployment
   function findArrayLength(
     ITornadoTreesV1 _tornadoTreesV1,
