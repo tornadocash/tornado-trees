@@ -17,7 +17,6 @@ contract TornadoTrees is Initializable {
   IBatchTreeUpdateVerifier public treeUpdateVerifier;
   ITornadoTreesV1 public immutable tornadoTreesV1;
 
-  // make sure CHUNK_TREE_HEIGHT has the same value in BatchTreeUpdate.circom
   uint256 public constant CHUNK_TREE_HEIGHT = 8;
   uint256 public constant CHUNK_SIZE = 2**CHUNK_TREE_HEIGHT;
   uint256 public constant ITEM_SIZE = 32 + 20 + 4;
@@ -98,48 +97,6 @@ contract TornadoTrees is Initializable {
     require(lastWithdrawalLeaf % CHUNK_SIZE == 0, "Incorrect TornadoTrees state");
     lastProcessedWithdrawalLeaf = lastWithdrawalLeaf;
     withdrawalsLength = withdrawalsV1Length;
-  }
-
-  // todo make things internal
-  /// @dev There is no array length getter for deposit and withdrawal arrays
-  /// in previous contract, so we have to find them length manually
-  function findArrayLength(
-    ITornadoTreesV1 _tornadoTreesV1,
-    string memory _type,
-    uint256 _from, // most likely array length after the proposal has passed
-    uint256 _step // optimal step size to find first match, approximately equals dispersion
-  ) public view returns (uint256) {
-    if (_from == 0 && _step == 0) {
-      return 0; // for tests
-    }
-    // Find the segment with correct array length
-    bool direction = elementExists(_tornadoTreesV1, _type, _from);
-    do {
-      _from = direction ? _from + _step : _from - _step;
-    } while (direction == elementExists(_tornadoTreesV1, _type, _from));
-    uint256 high = direction ? _from : _from + _step;
-    uint256 low = direction ? _from - _step : _from;
-    uint256 mid = (high + low) / 2;
-
-    // Perform a binary search in this segment
-    while (low < mid) {
-      if (elementExists(_tornadoTreesV1, _type, mid)) {
-        low = mid;
-      } else {
-        high = mid;
-      }
-      mid = (low + high) / 2;
-    }
-    return mid + 1;
-  }
-
-  function elementExists(
-    ITornadoTreesV1 _tornadoTreesV1,
-    string memory _type,
-    uint256 index
-  ) public view returns (bool success) {
-    // Try to get the element. If it succeeds the array length is higher, it it reverts the length is equal or lower
-    (success, ) = address(_tornadoTreesV1).staticcall{ gas: 2500 }(abi.encodeWithSignature(_type, index));
   }
 
   function registerDeposit(address _instance, bytes32 _commitment) public onlyTornadoProxy {
@@ -249,6 +206,48 @@ contract TornadoTrees is Initializable {
   function validateRoots(bytes32 _depositRoot, bytes32 _withdrawalRoot) public view {
     require(_depositRoot == depositRoot || _depositRoot == previousDepositRoot, "Incorrect deposit tree root");
     require(_withdrawalRoot == withdrawalRoot || _withdrawalRoot == previousWithdrawalRoot, "Incorrect withdrawal tree root");
+  }
+
+  /// @dev There is no array length getter for deposit and withdrawal arrays
+  /// in previous contract, so we have to find them length manually.
+  /// Used only during deployment
+  function findArrayLength(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 _from, // most likely array length after the proposal has passed
+    uint256 _step // optimal step size to find first match, approximately equals dispersion
+  ) internal view returns (uint256) {
+    if (_from == 0 && _step == 0) {
+      return 0; // for tests
+    }
+    // Find the segment with correct array length
+    bool direction = elementExists(_tornadoTreesV1, _type, _from);
+    do {
+      _from = direction ? _from + _step : _from - _step;
+    } while (direction == elementExists(_tornadoTreesV1, _type, _from));
+    uint256 high = direction ? _from : _from + _step;
+    uint256 low = direction ? _from - _step : _from;
+    uint256 mid = (high + low) / 2;
+
+    // Perform a binary search in this segment
+    while (low < mid) {
+      if (elementExists(_tornadoTreesV1, _type, mid)) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+      mid = (low + high) / 2;
+    }
+    return mid + 1;
+  }
+
+  function elementExists(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 index
+  ) public view returns (bool success) {
+    // Try to get the element. If it succeeds the array length is higher, it it reverts the length is equal or lower
+    (success, ) = address(_tornadoTreesV1).staticcall{ gas: 2500 }(abi.encodeWithSignature(_type, index));
   }
 
   function getRegisteredDeposits() external view returns (bytes32[] memory _deposits) {
