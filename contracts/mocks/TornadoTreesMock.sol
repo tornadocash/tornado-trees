@@ -24,6 +24,15 @@ contract TornadoTreesMock is TornadoTrees {
     return currentBlock == 0 ? block.number : currentBlock;
   }
 
+  function findArrayLengthMock(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 _from,
+    uint256 _step
+  ) public view returns (uint256) {
+    return findArrayLength(_tornadoTreesV1, _type, _from, _step);
+  }
+
   function register(
     address _instance,
     bytes32 _commitment,

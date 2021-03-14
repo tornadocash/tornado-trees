@@ -28,40 +28,70 @@ describe('findArrayLength', () => {
   })
 
   it('should work for even array', async () => {
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 4, 2)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      4,
+      2,
+    )
     expect(depositsLength).to.be.equal(depositsEven.length)
   })
 
   it('should work for empty array', async () => {
     publicArray = await PublicArray.deploy()
     // will throw out of gas if you pass non zero params
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 0, 0)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      0,
+      0,
+    )
     expect(depositsLength).to.be.equal(0)
   })
 
   it('should work for odd array', async () => {
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(depositsOdd)
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 4, 2)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      4,
+      2,
+    )
     expect(depositsLength).to.be.equal(depositsOdd.length)
   })
 
   it('should work for even array and odd step', async () => {
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 4, 3)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      4,
+      3,
+    )
     expect(depositsLength).to.be.equal(depositsEven.length)
   })
 
   it('should work for odd array and odd step', async () => {
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(depositsOdd)
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 4, 3)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      4,
+      3,
+    )
     expect(depositsLength).to.be.equal(depositsOdd.length)
   })
 
   it('should work for odd array and step 1', async () => {
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(depositsOdd)
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 4, 1)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      4,
+      1,
+    )
     expect(depositsLength).to.be.equal(depositsOdd.length)
   })
 
@@ -69,7 +99,7 @@ describe('findArrayLength', () => {
     const deposits = Array.from(Array(100).keys())
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(deposits)
-    const depositsLength = await tornadoTrees.findArrayLength(
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
       publicArray.address,
       'deposits(uint256)',
       67,
@@ -82,7 +112,12 @@ describe('findArrayLength', () => {
     const deposits = Array.from(Array(30).keys())
     publicArray = await PublicArray.deploy()
     await publicArray.setDeposits(deposits)
-    const depositsLength = await tornadoTrees.findArrayLength(publicArray.address, 'deposits(uint256)', 1, 50)
+    const depositsLength = await tornadoTrees.findArrayLengthMock(
+      publicArray.address,
+      'deposits(uint256)',
+      1,
+      50,
+    )
     expect(depositsLength).to.be.equal(deposits.length)
   })
 
@@ -100,7 +135,7 @@ describe('findArrayLength', () => {
       const deposits = Array.from(Array(len).keys())
       publicArray = await PublicArray.deploy()
       await publicArray.setDeposits(deposits)
-      const depositsLength = await tornadoTrees.findArrayLength(
+      const depositsLength = await tornadoTrees.findArrayLengthMock(
         publicArray.address,
         'deposits(uint256)',
         days * depositsPerDay,
