@@ -123,7 +123,6 @@ contract TornadoTrees is Initializable {
     TreeLeaf[CHUNK_SIZE] calldata _events
   ) public {
     uint256 offset = lastProcessedDepositLeaf;
-    require(_newRoot != previousDepositRoot, "Outdated deposit root");
     require(_currentRoot == depositRoot, "Proposed deposit root is invalid");
     require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect deposit insert index");
 
@@ -168,7 +167,6 @@ contract TornadoTrees is Initializable {
     TreeLeaf[CHUNK_SIZE] calldata _events
   ) public {
     uint256 offset = lastProcessedWithdrawalLeaf;
-    require(_newRoot != previousWithdrawalRoot, "Outdated withdrawal root");
     require(_currentRoot == withdrawalRoot, "Proposed withdrawal root is invalid");
     require(_pathIndices == offset >> CHUNK_TREE_HEIGHT, "Incorrect withdrawal insert index");
 
