@@ -10,7 +10,7 @@ contract AdminUpgradeableProxy is TransparentUpgradeableProxy {
   /**
    * @dev Initializes an upgradeable proxy backed by the implementation at `_logic`.
    */
-  constructor(address _logic, bytes memory _data) public payable TransparentUpgradeableProxy(_logic, msg.sender, _data) {}
+  constructor(address _logic, address _admin, bytes memory _data) public payable TransparentUpgradeableProxy(_logic, _admin, _data) {}
 
   /**
    * @dev Override to allow admin access the fallback function.
