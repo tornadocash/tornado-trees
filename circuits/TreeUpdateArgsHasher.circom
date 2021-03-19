@@ -11,7 +11,7 @@ template TreeUpdateArgsHasher(nLeaves) {
     signal output out;
 
     var header = 256 + 256 + 32;
-    var bitsPerLeaf = 160 + 256 + 32;
+    var bitsPerLeaf = 256 + 160 + 32;
     component hasher = Sha256(header + nLeaves * bitsPerLeaf);
 
     // the range check on old root is optional, it's enforced by smart contract anyway
