@@ -4,11 +4,12 @@ include "./MerkleTreeUpdater.circom";
 include "./Utils.circom";
 
 template TreeLayer(height) {
-  signal input ins[1 << (height + 1)];
-  signal output outs[1 << height];
+  var nItems = 1 << height;
+  signal input ins[nItems * 2];
+  signal output outs[nItems];
 
-  component hash[1 << height];
-  for(var i = 0; i < (1 << height); i++) {
+  component hash[nItems];
+  for(var i = 0; i < nItems; i++) {
     hash[i] = HashLeftRight();
     hash[i].left <== ins[i * 2];
     hash[i].right <== ins[i * 2 + 1];
