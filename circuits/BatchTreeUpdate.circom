@@ -1,7 +1,7 @@
 include "../node_modules/circomlib/circuits/poseidon.circom";
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "./MerkleTreeUpdater.circom";
-include "./Utils.circom";
+include "./TreeUpdateArgsHasher.circom";
 
 template TreeLayer(height) {
   var nItems = 1 << height;
