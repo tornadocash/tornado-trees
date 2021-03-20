@@ -21,6 +21,7 @@ template TreeLayer(height) {
 // Inserts a leaf batch into a tree
 // Checks that tree previously contained zero leaves in the same position
 // Hashes leaves with Poseidon hash
+// `batchLevels` should be less than `levels`
 template BatchTreeUpdate(levels, batchLevels, zeroBatchLeaf) {
   var height = levels - batchLevels;
   var nLeaves = 1 << batchLevels;
