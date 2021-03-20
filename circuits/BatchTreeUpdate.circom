@@ -3,6 +3,7 @@ include "../node_modules/circomlib/circuits/bitify.circom";
 include "./MerkleTreeUpdater.circom";
 include "./TreeUpdateArgsHasher.circom";
 
+// Computes hashes of the next tree layer
 template TreeLayer(height) {
   var nItems = 1 << height;
   signal input ins[nItems * 2];
@@ -19,6 +20,7 @@ template TreeLayer(height) {
 
 // Inserts a leaf batch into a tree
 // Checks that tree previously contained zero leaves in the same position
+// Hashes leaves with Poseidon hash
 template BatchTreeUpdate(levels, batchLevels, zeroBatchLeaf) {
   var height = levels - batchLevels;
   var nLeaves = 1 << batchLevels;

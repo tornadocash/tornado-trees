@@ -1,13 +1,15 @@
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/sha256/sha256.circom";
 
+// Computes a SHA256 hash of all inputs packed into a byte array
+// Field elements are padded to 256 bits with zeroes
 template TreeUpdateArgsHasher(nLeaves) {
-    signal private input oldRoot;
-    signal private input newRoot;
-    signal private input pathIndices;
-    signal private input instances[nLeaves];
-    signal private input hashes[nLeaves];
-    signal private input blocks[nLeaves];
+    signal input oldRoot;
+    signal input newRoot;
+    signal input pathIndices;
+    signal input instances[nLeaves];
+    signal input hashes[nLeaves];
+    signal input blocks[nLeaves];
     signal output out;
 
     var header = 256 + 256 + 32;

@@ -100,6 +100,7 @@ contract TornadoTrees is Initializable {
     withdrawalsLength = withdrawalsV1Length;
   }
 
+  /// @dev Queue a new deposit data to be inserted into a merkle tree
   function registerDeposit(address _instance, bytes32 _commitment) public onlyTornadoProxy {
     uint256 _depositsLength = depositsLength;
     deposits[_depositsLength] = keccak256(abi.encode(_instance, _commitment, blockNumber()));
@@ -107,6 +108,7 @@ contract TornadoTrees is Initializable {
     depositsLength = _depositsLength + 1;
   }
 
+  /// @dev Queue a new withdrawal data to be inserted into a merkle tree
   function registerWithdrawal(address _instance, bytes32 _nullifierHash) public onlyTornadoProxy {
     uint256 _withdrawalsLength = withdrawalsLength;
     withdrawals[_withdrawalsLength] = keccak256(abi.encode(_instance, _nullifierHash, blockNumber()));
@@ -114,6 +116,13 @@ contract TornadoTrees is Initializable {
     withdrawalsLength = _withdrawalsLength + 1;
   }
 
+  /// @dev Insert a full batch of queued deposits into a merkle tree
+  /// @param _proof A snark proof that elements were inserted correctly
+  /// @param _argsHash A hash of snark inputs
+  /// @param _argsHash Current merkle tree root
+  /// @param _newRoot Updated merkle tree root
+  /// @param _pathIndices Merkle path to inserted batch
+  /// @param _events A batch of inserted events (leaves)
   function updateDepositTree(
     bytes calldata _proof,
     bytes32 _argsHash,
@@ -158,6 +167,13 @@ contract TornadoTrees is Initializable {
     lastProcessedDepositLeaf = offset + CHUNK_SIZE;
   }
 
+  /// @dev Insert a full batch of queued withdrawals into a merkle tree
+  /// @param _proof A snark proof that elements were inserted correctly
+  /// @param _argsHash A hash of snark inputs
+  /// @param _argsHash Current merkle tree root
+  /// @param _newRoot Updated merkle tree root
+  /// @param _pathIndices Merkle path to inserted batch
+  /// @param _events A batch of inserted events (leaves)
   function updateWithdrawalTree(
     bytes calldata _proof,
     bytes32 _argsHash,
