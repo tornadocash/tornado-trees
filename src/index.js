@@ -42,7 +42,14 @@ function prove(input, keyBasePath) {
         fs.writeFileSync(`${dir}/input.json`, JSON.stringify(input, null, 2))
         out = await exec(`${keyBasePath} ${dir}/input.json ${dir}/witness.json`)
       } else {
-        await wtns.calculate(utils.unstringifyBigInts(input), `${keyBasePath}.wasm`, `${dir}/witness.wtns`)
+        await wtns.debug(
+          utils.unstringifyBigInts(input),
+          `${keyBasePath}.wasm`,
+          `${dir}/witness.wtns`,
+          `${keyBasePath}.sym`,
+          {},
+          console,
+        )
         const witness = utils.stringifyBigInts(await wtns.exportJson(`${dir}/witness.wtns`))
         fs.writeFileSync(`${dir}/witness.json`, JSON.stringify(witness, null, 2))
       }

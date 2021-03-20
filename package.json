@@ -42,7 +42,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/upgrades-core": "^1.5.1",
-    "circom": "^0.5.38",
+    "circom": "0.5.42",
     "circom_runtime": "^0.1.12",
     "circomlib": "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",
     "dotenv": "^8.2.0",

@@ -28,18 +28,20 @@ template TreeUpdateArgsHasher(nLeaves) {
     bitsNewRoot.in <== newRoot;
     bitsPathIndices.in <== pathIndices;
 
-    hasher.in[0] <== 0;
-    hasher.in[1] <== 0;
+    var index = 0;
+
+    hasher.in[index++] <== 0;
+    hasher.in[index++] <== 0;
     for(var i = 0; i < 254; i++) {
-        hasher.in[i + 2] <== bitsOldRoot.out[253 - i];
+        hasher.in[index++] <== bitsOldRoot.out[253 - i];
     }
-    hasher.in[256] <== 0;
-    hasher.in[257] <== 0;
+    hasher.in[index++] <== 0;
+    hasher.in[index++] <== 0;
     for(var i = 0; i < 254; i++) {
-        hasher.in[i + 258] <== bitsNewRoot.out[253 - i];
+        hasher.in[index++] <== bitsNewRoot.out[253 - i];
     }
     for(var i = 0; i < 32; i++) {
-        hasher.in[i + 512] <== bitsPathIndices.out[31 - i];
+        hasher.in[index++] <== bitsPathIndices.out[31 - i];
     }
     for(var leaf = 0; leaf < nLeaves; leaf++) {
         // the range check on hash is optional, it's enforced by the smart contract anyway
@@ -49,16 +51,16 @@ template TreeUpdateArgsHasher(nLeaves) {
         bitsHash[leaf].in <== hashes[leaf];
         bitsInstance[leaf].in <== instances[leaf];
         bitsBlock[leaf].in <== blocks[leaf];
-        hasher.in[header + leaf * bitsPerLeaf + 0] <== 0;
-        hasher.in[header + leaf * bitsPerLeaf + 1] <== 0;
+        hasher.in[index++] <== 0;
+        hasher.in[index++] <== 0;
         for(var i = 0; i < 254; i++) {
-            hasher.in[header + leaf * bitsPerLeaf + i + 2] <== bitsHash[leaf].out[253 - i];
+            hasher.in[index++] <== bitsHash[leaf].out[253 - i];
         }
         for(var i = 0; i < 160; i++) {
-            hasher.in[header + leaf * bitsPerLeaf + i + 256] <== bitsInstance[leaf].out[159 - i];
+            hasher.in[index++] <== bitsInstance[leaf].out[159 - i];
         }
         for(var i = 0; i < 32; i++) {
-            hasher.in[header + leaf * bitsPerLeaf + i + 416] <== bitsBlock[leaf].out[31 - i];
+            hasher.in[index++] <== bitsBlock[leaf].out[31 - i];
         }
     }
     component b2n = Bits2Num(256);
