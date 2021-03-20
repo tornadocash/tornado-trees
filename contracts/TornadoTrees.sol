@@ -36,6 +36,8 @@ contract TornadoTrees is Initializable {
 
   event DepositData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
   event WithdrawalData(address instance, bytes32 indexed hash, uint256 block, uint256 index);
+  event VerifierUpdated(address newVerifier);
+  event ProxyUpdated(address newProxy);
 
   struct TreeLeaf {
     bytes32 hash;
@@ -283,10 +285,12 @@ contract TornadoTrees is Initializable {
 
   function setTornadoProxyContract(address _tornadoProxy) external onlyGovernance {
     tornadoProxy = _tornadoProxy;
+    emit ProxyUpdated(_tornadoProxy);
   }
 
   function setVerifierContract(IBatchTreeUpdateVerifier _treeUpdateVerifier) external onlyGovernance {
     treeUpdateVerifier = _treeUpdateVerifier;
+    emit VerifierUpdated(address(_treeUpdateVerifier));
   }
 
   function blockNumber() public view virtual returns (uint256) {
