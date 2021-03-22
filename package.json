@@ -1,6 +1,6 @@
 {
   "name": "tornado-trees",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "src/index.js",
   "repository": "https://github.com/tornadocash/tornado-trees.git",
   "author": "Tornadocash team <hello@tornado.cash>",
