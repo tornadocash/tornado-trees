@@ -149,9 +149,10 @@ contract TornadoTrees is Initializable {
       bytes32 deposit = offset + i >= depositsV1Length ? deposits[offset + i] : tornadoTreesV1.deposits(offset + i);
       require(leafHash == deposit, "Incorrect deposit");
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
+        let itemOffset := add(data, mul(ITEM_SIZE, i))
+        mstore(add(itemOffset, 0x7c), blockNumber)
+        mstore(add(itemOffset, 0x78), instance)
+        mstore(add(itemOffset, 0x64), hash)
       }
       if (offset + i >= depositsV1Length) {
         delete deposits[offset + i];
@@ -200,9 +201,10 @@ contract TornadoTrees is Initializable {
       bytes32 withdrawal = offset + i >= withdrawalsV1Length ? withdrawals[offset + i] : tornadoTreesV1.withdrawals(offset + i);
       require(leafHash == withdrawal, "Incorrect withdrawal");
       assembly {
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x7c), blockNumber)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x78), instance)
-        mstore(add(add(data, mul(ITEM_SIZE, i)), 0x64), hash)
+        let itemOffset := add(data, mul(ITEM_SIZE, i))
+        mstore(add(itemOffset, 0x7c), blockNumber)
+        mstore(add(itemOffset, 0x78), instance)
+        mstore(add(itemOffset, 0x64), hash)
       }
       if (offset + i >= withdrawalsV1Length) {
         delete withdrawals[offset + i];
