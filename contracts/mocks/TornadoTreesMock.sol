@@ -113,4 +113,16 @@ contract TornadoTreesMock is TornadoTrees {
       _withdrawals[i] = withdrawals[lastProcessedWithdrawalLeaf + i];
     }
   }
+
+  function findArrayLength(
+    ITornadoTreesV1 _tornadoTreesV1,
+    string memory _type,
+    uint256 _from, // most likely array length after the proposal has passed
+    uint256 _step // optimal step size to find first match, approximately equals dispersion
+  ) internal view override returns (uint256) {
+    if (_from == 0 && _step == 0) {
+      return 0;
+    }
+    return super.findArrayLength(_tornadoTreesV1, _type, _from, _step);
+  }
 }
