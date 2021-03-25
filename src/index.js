@@ -64,6 +64,14 @@ function prove(input, keyBasePath) {
   })
 }
 
+/**
+ * Generates inputs for a snark and tornado trees smart contract.
+ * This function updates MerkleTree argument
+ *
+ * @param tree Merkle tree with current smart contract state. This object is mutated during function execution.
+ * @param events New batch of events to insert.
+ * @returns {{args: [string, string, string, string, *], input: {pathElements: *, instances: *, blocks: *, newRoot: *, hashes: *, oldRoot: *, pathIndices: string}}}
+ */
 function batchTreeUpdate(tree, events) {
   const batchHeight = Math.log2(events.length)
   if (!Number.isInteger(batchHeight)) {
