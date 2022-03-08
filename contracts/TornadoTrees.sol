@@ -173,7 +173,7 @@ contract TornadoTrees is Initializable {
   /// @dev Insert a full batch of queued withdrawals into a merkle tree
   /// @param _proof A snark proof that elements were inserted correctly
   /// @param _argsHash A hash of snark inputs
-  /// @param _argsHash Current merkle tree root
+  /// @param _currentRoot Current merkle tree root
   /// @param _newRoot Updated merkle tree root
   /// @param _pathIndices Merkle path to inserted batch
   /// @param _events A batch of inserted events (leaves)
